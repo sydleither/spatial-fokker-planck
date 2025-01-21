@@ -6,33 +6,37 @@ import numpy as np
 
 game_colors = {"sensitive_wins":"#4C956C", "coexistence":"#F97306",
                "bistability":"#047495", "resistant_wins":"#EF7C8E"}
+N = 500
 
 
-def get_sample_data():
+def get_sample_data(include_n=False):
     '''
     One sample parameter set for each game quandrant
     '''
-    parameters = {"sensitive_wins":{"N":1000, "mu":0.005, "awm":0.1, "amw":-0.1, "sm":0.05},
-                  "coexistence":{"N":1000, "mu":0.005, "awm":0.06, "amw":-0.02, "sm":0.05},
-                  "bistability":{"N":1000, "mu":0.005, "awm":0.025, "amw":-0.075, "sm":0.05},
-                  "resistant_wins":{"N":1000, "mu":0.005, "awm":-0.05, "amw":0.05, "sm":0.05}}
+    parameters = {"sensitive_wins":{"mu":0.005, "awm":0.1, "amw":-0.1, "sm":0.05},
+                  "coexistence":{"mu":0.005, "awm":0.06, "amw":-0.02, "sm":0.05},
+                  "bistability":{"mu":0.005, "awm":0.025, "amw":-0.075, "sm":0.05},
+                  "resistant_wins":{"mu":0.005, "awm":-0.05, "amw":0.05, "sm":0.05}}
     ydata = {}
     xdata = {}
     for game,param_set in parameters.items():
-        n = param_set["N"]
+        if include_n:
+            param_set["N"] = N
         mu = param_set["mu"]
         awm = param_set["awm"]
         amw = param_set["amw"]
         sm = param_set["sm"]
-        p = np.linspace(0.01, 0.99, param_set["N"])
-        ydata[game] = fokker_planck(p, n, mu, awm, amw, sm)
+        p = np.linspace(0.01, 0.99, N)
+        ydata[game] = fokker_planck(p, N, mu, awm, amw, sm)
         xdata[game] = p
     return parameters, xdata, ydata
 
 
 def fokker_planck(x, n, mu, awm, amw, s):
     '''
-    The Fokker-Planck equation as defined in Barker-Clarke et al., 2024
+    The Fokker-Planck equation as defined in Barker-Clarke et al., 2024.
+    x = 0 or x = 1 will break the equation due to the log.
+    Starting conditions when fitting are important.
     '''
     if awm == 0:
         fx = s*x
@@ -40,7 +44,15 @@ def fokker_planck(x, n, mu, awm, amw, s):
         fx = (-x + mu*np.log(1-x)+mu*np.log(x)-x*amw/awm +
               np.log(1+x*awm)*(amw + (1+s+amw)*awm)/(awm**2))
     phi = np.log(x*(1-x)/2*n) - 2*n*fx
-    return np.exp(-phi)
+    c = np.exp(-phi)
+    return c
+
+
+def fokker_planck_fixedn(x, mu, awm, amw, s):
+    '''
+    The Fokker-Planck equation with a fixed N.
+    '''
+    return fokker_planck(x, N, mu, awm, amw, s)
 
 
 def residuals(param_set, xdata, ydata):
