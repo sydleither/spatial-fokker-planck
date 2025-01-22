@@ -2,7 +2,6 @@
 Calculate the error in estimating parameters on one parameter set in each game quadrant
 '''
 import matplotlib.pyplot as plt
-import numpy as np
 from scipy.optimize import least_squares
 
 from common import fokker_planck_fixedn, game_colors, get_sample_data

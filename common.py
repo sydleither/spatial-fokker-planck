@@ -6,7 +6,7 @@ import numpy as np
 
 game_colors = {"sensitive_wins":"#4C956C", "coexistence":"#F97306",
                "bistability":"#047495", "resistant_wins":"#EF7C8E"}
-N = 500
+N = 1000
 
 
 def get_sample_data(include_n=False):
@@ -32,20 +32,22 @@ def get_sample_data(include_n=False):
     return parameters, xdata, ydata
 
 
-def fokker_planck(x, n, mu, awm, amw, s):
+def fokker_planck(x, n, mu, awm, amw, sm):
     '''
     The Fokker-Planck equation as defined in Barker-Clarke et al., 2024.
     x = 0 or x = 1 will break the equation due to the log.
     Starting conditions when fitting are important.
     '''
     if awm == 0:
-        fx = s*x
+        fx = sm*x
     else:
-        fx = (-x + mu*np.log(1-x)+mu*np.log(x)-x*amw/awm +
-              np.log(1+x*awm)*(amw + (1+s+amw)*awm)/(awm**2))
-    phi = np.log(x*(1-x)/2*n) - 2*n*fx
-    c = np.exp(-phi)
-    return c
+        fx = (((1+sm)*awm+(1+awm)*amw)/awm**2)*np.log(1+awm*x) - ((awm+amw)/awm)*x
+    phi = (1-2*n*mu)*np.log(x*(1-x)) - 2*n*fx
+    rho = np.exp(-phi)
+    # print(f"({mu}, {awm}, {amw}, {sm})")
+    # print(list((rho)[0::100]))
+    # print()
+    return rho
 
 
 def fokker_planck_fixedn(x, mu, awm, amw, s):
@@ -59,7 +61,7 @@ def residuals(param_set, xdata, ydata):
     '''
     Get sum of squares error between true params and estimated params
     '''
-    return np.sum((ydata - fokker_planck(xdata, *param_set))**2)
+    return np.sum((ydata - fokker_planck_fixedn(xdata, *param_set))**2)
 
 
 def calculate_fp_params(a, b, c, d):
