@@ -6,7 +6,7 @@ import numpy as np
 
 game_colors = {"sensitive_wins":"#4C956C", "coexistence":"#F97306",
                "bistability":"#047495", "resistant_wins":"#EF7C8E"}
-N = 1000
+N = 100
 
 
 def get_sample_data(include_n=False):
@@ -34,9 +34,8 @@ def get_sample_data(include_n=False):
 
 def fokker_planck(x, n, mu, awm, amw, sm):
     '''
-    The Fokker-Planck equation as defined in Barker-Clarke et al., 2024.
-    x = 0 or x = 1 will break the equation due to the log.
-    Starting conditions when fitting are important.
+    The Fokker-Planck equation as defined in Barker-Clarke et al., 2024
+    x = 0 or x = 1 will break the equation due to the log
     '''
     if awm == 0:
         fx = sm*x
@@ -52,7 +51,7 @@ def fokker_planck(x, n, mu, awm, amw, sm):
 
 def fokker_planck_fixedn(x, mu, awm, amw, s):
     '''
-    The Fokker-Planck equation with a fixed N.
+    The Fokker-Planck equation with a fixed N
     '''
     return fokker_planck(x, N, mu, awm, amw, s)
 

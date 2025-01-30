@@ -9,6 +9,9 @@ from common import fokker_planck_fixedn, get_sample_data, residuals
 
 
 def main():
+    '''
+    Profile likelihood
+    '''
     parameters, xdata, ydata = get_sample_data()
     ranges = {"mu":np.linspace(0, 0.1, 100),
               "awm":np.linspace(-0.1, 0.1, 100),
@@ -17,8 +20,8 @@ def main():
 
     for game, param_set in parameters.items():
         profiles = {}
-        popt, _ = curve_fit(fokker_planck_fixedn, xdata[game], ydata[game],
-                            p0=[0, 0, 0, 0], bounds=(-0.5, 0.5))
+        popt, _, _, _, _ = curve_fit(fokker_planck_fixedn, xdata[game], ydata[game],
+                                     p0=[0, 0, 0, 0], bounds=(-0.5, 0.5))
         est_params = {k:popt[i] for i,k in enumerate(ranges)}
         for param_name in est_params:
             profiles[param_name] = []
@@ -30,7 +33,7 @@ def main():
         fig, ax = plt.subplots(1, len(ranges), figsize=(5*len(ranges), 5))
         for i,param_name in enumerate(profiles):
             ax[i].scatter(ranges[param_name], profiles[param_name], color="black")
-            ax[i].axvline(param_set[param_name], color="pink")
+            ax[i].axvline(param_set[param_name], color="hotpink")
             ax[i].axvline(est_params[param_name], color="green")
             ax[i].set(title=param_name)
         fig.supxlabel("Parameter")

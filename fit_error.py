@@ -10,14 +10,21 @@ from common import fokker_planck_fixedn, game_colors, get_sample_data
 global_param_history = []
 def residuals_callback(param_set, xdata, ydata):
     '''
-    Get error between true params and estimated params, to plug into scipy least_squares.
-    Also tracks the parameters least_squares tries as it optimizes.
+    Get error between true params and estimated params, to plug into scipy least_squares
+    Also tracks the parameters least_squares tries as it optimizes
     '''
     global_param_history.append(param_set.copy())
     return fokker_planck_fixedn(xdata, *param_set) - ydata
 
 
 def main():
+    '''
+    Given a set of parameters (N, mu, awm, amw, sm)
+    Generate a distribution using Fokker-Planck equation with those parameters
+    Give the distribution and Fokker-Planck equation to a solver
+    Compare solver-estimated parameters to true parameters
+    Plot resulting curves and solver search process
+    '''
     global global_param_history
     parameters, xdata, ydata = get_sample_data()
     initial_guess = (0, 0, 0, 0)

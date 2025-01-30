@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from common import classify_game, game_colors, get_sample_data
 
 
-def visualize_curves(params, xdata, ydata,):
+def visualize_curves(params, xdata, ydata):
     '''
     Visualize the FP solutions, each curve on a different plot
     '''
@@ -29,6 +29,9 @@ def visualize_curves(params, xdata, ydata,):
 
 
 def main():
+    '''
+    Visualize FP
+    '''
     parameters, xdata, ydata = get_sample_data()
     visualize_curves(parameters, xdata, ydata)
 
