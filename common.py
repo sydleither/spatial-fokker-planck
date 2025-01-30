@@ -5,7 +5,8 @@ import numpy as np
 
 
 game_colors = {"sensitive_wins":"#4C956C", "coexistence":"#F97306",
-               "bistability":"#047495", "resistant_wins":"#EF7C8E"}
+               "bistability":"#047495", "resistant_wins":"#EF7C8E",
+               "unknown":"gray"}
 N = 100
 
 
