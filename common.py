@@ -44,7 +44,7 @@ def fokker_planck(x, n, mu, awm, amw, sm):
     phi = (1-2*n*mu)*np.log(x*(1-x)) - 2*n*fx
     rho = np.exp(-phi)
     # print(f"({mu}, {awm}, {amw}, {sm})")
-    # print(list((rho)[0::100]))
+    # print(list((rho)[0::10]))
     # print()
     return rho
 
@@ -54,13 +54,6 @@ def fokker_planck_fixedn(x, mu, awm, amw, s):
     The Fokker-Planck equation with a fixed N
     '''
     return fokker_planck(x, N, mu, awm, amw, s)
-
-
-def residuals(param_set, xdata, ydata):
-    '''
-    Get sum of squares error between true params and estimated params
-    '''
-    return np.sum((ydata - fokker_planck_fixedn(xdata, *param_set))**2)
 
 
 def calculate_fp_params(a, b, c, d):
