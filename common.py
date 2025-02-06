@@ -7,28 +7,28 @@ import numpy as np
 game_colors = {"sensitive_wins":"#4C956C", "coexistence":"#F97306",
                "bistability":"#047495", "resistant_wins":"#EF7C8E",
                "unknown":"gray"}
-N = 100
+param_names = ["N", "mu", "awm", "amw", "sm"]
 
 
-def get_sample_data(include_n=False):
+def get_sample_data(n, mu, include_fixed=False):
     '''
     One sample parameter set for each game quandrant
     '''
-    parameters = {"sensitive_wins":{"mu":0.005, "awm":0.1, "amw":-0.1, "sm":0.05},
-                  "coexistence":{"mu":0.005, "awm":0.06, "amw":-0.02, "sm":0.05},
-                  "bistability":{"mu":0.005, "awm":0.025, "amw":-0.075, "sm":0.05},
-                  "resistant_wins":{"mu":0.005, "awm":-0.05, "amw":0.05, "sm":0.05}}
+    parameters = {"sensitive_wins":{"awm":0.1, "amw":-0.1, "sm":0.05},
+                  "coexistence":{"awm":0.06, "amw":-0.02, "sm":0.05},
+                  "bistability":{"awm":0.025, "amw":-0.075, "sm":0.05},
+                  "resistant_wins":{"awm":-0.05, "amw":0.05, "sm":0.05}}
     ydata = {}
     xdata = {}
     for game,param_set in parameters.items():
-        if include_n:
-            param_set["N"] = N
-        mu = param_set["mu"]
+        if include_fixed:
+            param_set["N"] = n
+            param_set["mu"] = mu
         awm = param_set["awm"]
         amw = param_set["amw"]
         sm = param_set["sm"]
-        p = np.linspace(0.01, 0.99, N)
-        ydata[game] = fokker_planck(p, N, mu, awm, amw, sm)
+        p = np.linspace(0.01, 0.99, n)
+        ydata[game] = fokker_planck(p, n, mu, awm, amw, sm)
         xdata[game] = p
     return parameters, xdata, ydata
 
@@ -42,19 +42,13 @@ def fokker_planck(x, n, mu, awm, amw, sm):
         fx = sm*x
     else:
         fx = (((1+sm)*awm+(1+awm)*amw)/awm**2)*np.log(1+awm*x) - ((awm+amw)/awm)*x
+        #fx = (((1+sm)*awm+(1+awm)*amw)/awm**2)*np.log(1+awm*x) + ((awm+amw)/awm)*x - amw/awm
     phi = (1-2*n*mu)*np.log(x*(1-x)) - 2*n*fx
     rho = np.exp(-phi)
     # print(f"({mu}, {awm}, {amw}, {sm})")
     # print(list((rho)[0::10]))
     # print()
     return rho
-
-
-def fokker_planck_fixedn(x, mu, awm, amw, s):
-    '''
-    The Fokker-Planck equation with a fixed N
-    '''
-    return fokker_planck(x, N, mu, awm, amw, s)
 
 
 def calculate_fp_params(a, b, c, d):

@@ -1,77 +1,87 @@
 '''
-Calculate the error in estimating parameters on one parameter set in each game quadrant
+Calculate the error in estimating input params
 '''
+import sys
+
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.optimize import least_squares
 
-from common import fokker_planck_fixedn, game_colors, get_sample_data
+from common import classify_game, fokker_planck, game_colors, param_names
+
+
+n = 0
+mu = 0
+def fokker_planck_fixed(x, awm, amw, s):
+    '''
+    The Fokker-Planck equation with a fixed N and mu
+    '''
+    return fokker_planck(x, n, mu, awm, amw, s)
 
 
 global_param_history = []
 def residuals_callback(param_set, xdata, ydata):
     '''
     Get error between true params and estimated params, to plug into scipy least_squares
-    Also tracks the parameters least_squares tries as it optimizes
+    Also tracks the params least_squares tries as it optimizes
     '''
     global_param_history.append(param_set.copy())
-    return fokker_planck_fixedn(xdata, *param_set) - ydata
+    return fokker_planck_fixed(xdata, *param_set) - ydata
 
 
-def main():
+def format_vals(vals):
     '''
-    Given a set of parameters (N, mu, awm, amw, sm)
-    Generate a distribution using Fokker-Planck equation with those parameters
+    Take in list of params and return formatted strings
+    '''
+    return [f"{x:6.3f}" for x in vals]
+
+
+def main(params):
+    '''
+    Given a set of params (N, mu, awm, amw, sm)
+    Generate a distribution using Fokker-Planck equation with those params
     Give the distribution and Fokker-Planck equation to a solver
-    Compare solver-estimated parameters to true parameters
+    Compare solver-estimated params to true params
     Plot resulting curves and solver search process
     '''
-    global global_param_history
-    parameters, xdata, ydata = get_sample_data()
-    initial_guess = (0, 0, 0, 0)
-    bounds = (-0.5, 0.5)
+    global global_param_history, n, mu
+    params = [float(x) for x in params]
+    n = int(params[0])
+    mu = params[1]
+    true_params = params[2:]
+    xdata = np.linspace(0.01, 0.99, n)
+    ydata = fokker_planck(xdata, n, mu, *true_params)
 
-    local_param_history = {}
-    errors = {}
-    estimated = {}
-    for game,true_params in parameters.items():
-        result = least_squares(residuals_callback, initial_guess,
-                               args=(xdata[game], ydata[game]), bounds=bounds)
-        popt = result.x
-        estimated[game] = fokker_planck_fixedn(xdata[game], *popt)
-        errors[game] = {k:abs(true_params[k]-popt[i]) for i,k in enumerate(true_params)}
-        local_param_history[game] = list(zip(*global_param_history.copy()))
-        global_param_history = []
-        print(game)
-        print(f"\tTrue Parameters: {true_params}")
-        print(f"\tEst Parameters: {popt}")
+    result = least_squares(residuals_callback, (0, 0, 0), args=(xdata, ydata), bounds=(-0.5, 0.5))
+    est_params = result.x
 
-    fig, ax = plt.subplots(2, len(parameters), figsize=(5*len(parameters), 10))
-    for i,game in enumerate(parameters):
-        ax[0,i].plot(xdata[game], ydata[game]/max(ydata[game]),
-                     linewidth=2, color=game_colors[game])
-        ax[0,i].plot(xdata[game], estimated[game]/max(estimated[game]),
-                     linestyle="dashed", linewidth=2, color="dimgray")
-        ax[0,i].set(title=game, xlabel="Fraction Mutant", ylabel="Probability Density")
-        ax[1,i].bar(parameters[game].keys(), errors[game].values())
-        ax[1,i].set(xlabel="Parameter", ylabel="Error")
+    estimated = fokker_planck_fixed(xdata, *est_params)
+    param_histories = list(zip(*global_param_history.copy()))
+
+    param_colors = ["#75bbfd", "#bf77f6", "#f7879a"]
+    fig, ax = plt.subplots(1, 2, figsize=(8, 4))
+    ax[0].plot(xdata, ydata/max(ydata), lw=2, label="True",
+               color=game_colors[classify_game(*true_params)])
+    ax[0].plot(xdata, estimated/max(estimated), lw=3, label="Estimated",
+               color=game_colors[classify_game(*est_params)], ls="--")
+    ax[0].set(xlabel="Fraction Mutant", ylabel="Probability Density")
+    ax[0].legend()
+    est_param_names = param_names[2:]
+    for i,param_history in enumerate(param_histories):
+        ax[1].plot(range(len(param_history)), param_history,
+                   color=param_colors[i], label=est_param_names[i])
+        ax[1].axhline(true_params[i], color=param_colors[i], linestyle="dashed")
+        ax[1].set(xlabel="Iteration", ylabel="Parameter Value")
+        ax[1].legend()
+    fig.suptitle(", ".join(format_vals(true_params))+"\n"+", ".join(format_vals(est_params)))
     fig.tight_layout()
     fig.patch.set_alpha(0)
-    fig.savefig("fit_error.png", bbox_inches="tight")
-
-    colors = ["blue", "orange", "green", "red"]
-    fig, ax = plt.subplots(1, len(parameters), figsize=(5*len(parameters), 5))
-    for i,game in enumerate(parameters):
-        param_names = list(parameters[game].keys())
-        for j,game_param_history in enumerate(local_param_history[game]):
-            ax[i].scatter(range(len(game_param_history)), game_param_history,
-                          color=colors[j], label=param_names[j])
-            ax[i].axhline(parameters[game][param_names[j]], color=colors[j])
-            ax[i].set(title=game, xlabel="Iteration", ylabel="Parameter Value")
-            ax[i].legend()
-    fig.tight_layout()
-    fig.patch.set_alpha(0)
-    fig.savefig("fit_error_param_history.png", bbox_inches="tight")
+    file_name = "_".join([f"{param_names[i]}={params[i]}" for i in range(len(params))])
+    fig.savefig(f"fit_{file_name}.png", bbox_inches="tight")
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 6:
+        print("Please provide N, mu, awm, amw, and sm as arguments.")
+    else:
+        main(sys.argv[1:])

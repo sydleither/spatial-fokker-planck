@@ -18,29 +18,30 @@ def main(params):
     mu = float(mu)
     sm = float(sm)
     x = np.linspace(0.01, 0.99, n)
-    inc = 0.01
+    inc = 0.02
 
-    fp_data = [[], []]
-    a_data = [[], []]
-    colors = [[], []]
+    fp_data = [[], [], [], []]
+    a_data = [[], [], [], []]
+    colors = [[], [], [], []]
+    i = 0
     for awm_mod in [inc, -inc]:
         for amw_mod in [inc, -inc]:
             awm = sm
             amw = -sm
-            i = 0 if awm_mod == amw_mod else 1
-            for _ in range(10):
+            for _ in range(8):
                 awm += awm_mod
                 amw += amw_mod
                 y = fokker_planck(x, n, mu, awm, amw, sm)
                 fp_data[i].append(y/max(y))
                 a_data[i].append([awm, amw])
                 colors[i].append(game_colors[classify_game(awm, amw, sm)])
+            i += 1
     
     num_cols = len(fp_data[0])
-    fig, ax = plt.subplots(2, num_cols, figsize=(num_cols*4, 8))
+    fig, ax = plt.subplots(4, num_cols, figsize=(num_cols*3, 12))
     for i in range(len(fp_data)):
         for j in range(num_cols):
-            ax[i][j].plot(x, fp_data[i][j], c=colors[i][j])
+            ax[i][j].plot(x, fp_data[i][j], c=colors[i][j], linewidth=3)
             ax[i][j].set(title=f"awm={a_data[i][j][0]:4.2f}, amw={a_data[i][j][1]:4.2f}")
     fig.tight_layout()
     fig.patch.set_alpha(0)
