@@ -70,6 +70,25 @@ def check_stability(x, a, b, c, d):
         return 0
 
 
+def plot_stability(x, y, zero_stable, int_stable, one_stable, file_name, xlabel, ylabel):
+    '''
+    Plot stability of x=0, x=x*, x=1 equilibria
+    '''
+    fig, ax = plt.subplots(1, 3, figsize=(9, 3))
+    ax[0].scatter(x, y, c=zero_stable, cmap="PiYG")
+    ax[0].set(title="Stability of x=0 Equilibrium", xlabel=xlabel, ylabel=ylabel)
+    ax[1].scatter(x, y, c=int_stable, cmap="PiYG")
+    ax[1].set(title="Stability of x=x* Equilibrium", xlabel=xlabel, ylabel=ylabel)
+    points = ax[2].scatter(x, y, c=one_stable, cmap="PiYG")
+    ax[2].set(title="Stability of x=1 Equilibrium", xlabel=xlabel, ylabel=ylabel)
+    for i in range(3):
+        ax[i].axhline(0, c="black")
+        ax[i].axvline(0, c="black")
+    fig.colorbar(points)
+    fig.tight_layout()
+    fig.savefig(f"{file_name}.png")
+
+
 def stability():
     '''
     Plot stability of equilibria of the replicator equation with varying a,b,c,d
@@ -93,21 +112,38 @@ def stability():
                         int_stable.append(check_stability(int_eq, a, b, c, d))
                     zero_stable.append(check_stability(0, a, b, c, d))
                     one_stable.append(check_stability(1, a, b, c, d))
+    plot_stability(x, y, zero_stable, int_stable, one_stable, "stability", "c-a", "b-d")
 
-    fig, ax = plt.subplots(1, 3, figsize=(9, 3))
-    ax[0].scatter(x, y, c=zero_stable, cmap="PiYG")
-    ax[0].set(title="Stability of x=0 Equilibrium", xlabel="c-a", ylabel="b-d")
-    ax[1].scatter(x, y, c=int_stable, cmap="PiYG")
-    ax[1].set(title="Stability of x=x* Equilibrium", xlabel="c-a", ylabel="b-d")
-    points = ax[2].scatter(x, y, c=one_stable, cmap="PiYG")
-    ax[2].set(title="Stability of x=1 Equilibrium", xlabel="c-a", ylabel="b-d")
-    for i in range(3):
-        ax[i].axhline(0, c="black")
-        ax[i].axvline(0, c="black")
-    fig.colorbar(points)
-    fig.tight_layout()
-    fig.savefig("stability.png")
+
+def stability_transformed(sm):
+    '''
+    Plot stability of equilibria of the transformed replicator equation with varying awm, amw, sm
+    '''
+    vals = np.arange(-0.1, 0.1, 0.01)
+    x = []
+    y = []
+    zero_stable = []
+    one_stable = []
+    int_stable = []
+    for awm in vals:
+        for amw in vals:
+            x.append(amw/sm)
+            y.append(awm/sm)
+            a = 0
+            b = awm
+            c = sm+amw
+            d = sm
+            if np.isclose((b-d)+(c-a), 0):
+                int_stable.append(0)
+            else:
+                int_eq = (c-a)/((b-d)+(c-a))
+                int_stable.append(check_stability(int_eq, a, b, c, d))
+            zero_stable.append(check_stability(0, a, b, c, d))
+            one_stable.append(check_stability(1, a, b, c, d))
+    plot_stability(x, y, zero_stable, int_stable, one_stable,
+                   f"stability_{sm}sm", "amw/sm", "awm/sm")
 
 
 phase_space()
 stability()
+stability_transformed(0.05)
