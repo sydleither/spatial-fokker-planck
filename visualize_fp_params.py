@@ -7,15 +7,14 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-from common import classify_game, fokker_planck, game_colors
+from common import classify_game, fokker_planck, game_colors, param_names
 
 
 def visualize_curve(params, x, y):
     '''
     Visualize the FP solution
     '''
-    param_labels = ["N", "mu", "awm", "amw", "sm"]
-    title = [f"{param_labels[i]}={params[i]}" for i in range(len(params))]
+    title = [f"{param_names[i]}={params[i]}" for i in range(len(params))]
     fig, ax = plt.subplots(figsize=(5, 5))
     classified_game = classify_game(params[2], params[3], params[4])
     ax.plot(x, y/max(y), color=game_colors[classified_game], linewidth=3)

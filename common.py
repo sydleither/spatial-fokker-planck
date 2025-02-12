@@ -42,9 +42,9 @@ def fokker_planck(x, n, mu, awm, amw, sm):
         fx = sm*x
     else:
         fx = (((1+sm)*awm+(1+awm)*amw)/awm**2)*np.log(1+awm*x) - ((awm+amw)/awm)*x
-        #fx = (((1+sm)*awm+(1+awm)*amw)/awm**2)*np.log(1+awm*x) + ((awm+amw)/awm)*x - amw/awm
-    phi = (1-2*n*mu)*np.log(x*(1-x)) - 2*n*fx
+    phi = (1-2*n*mu)*np.log(x*(1-x)) - 2*n*fx - np.log(2*n)
     rho = np.exp(-phi)
+    #rho = -phi
     # print(f"({mu}, {awm}, {amw}, {sm})")
     # print(list((rho)[0::10]))
     # print()
