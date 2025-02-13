@@ -7,44 +7,69 @@ import sys
 import emcee
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
-from common import fokker_planck
+from common import fokker_planck, param_names
 
 
 n = 0
 mu = 0
-def fokker_planck_fixed(x, awm, amw, s):
+def fokker_planck_fixed(x, awm, amw, sm):
     '''
     The Fokker-Planck equation with a fixed N and mu
     '''
-    return fokker_planck(x, n, mu, awm, amw, s)
-
-
-def lnlike(params, x, y, yerr):
-    '''
-    chi-squared log likelihood
-    '''
-    return -0.5*np.sum(((y-fokker_planck_fixed(x, *params))/yerr)**2)
-
-
-def lnprior(params):
-    '''
-    Enforce parameter boundaries (priors)
-    '''
-    params = np.array(params)
-    if np.any(params > 1) or np.any(params < -1):
-        return -np.inf
-    return 0.0
+    return fokker_planck(x, n, mu, awm, amw, sm)
 
 
 def lnprob(params, x, y, yerr):
     '''
-    Return likelihood if the priors are satisfied
+    Return chi-squared log likelihood if the priors are satisfied
     '''
-    lp = lnprior(params)
-    if lp != 0.0:
+    params = np.array(params)
+    if np.any(params > 1) or np.any(params < -1):
         return -np.inf
-    return lnlike(params, x, y, yerr)
+    return -0.5*np.sum(((y-fokker_planck_fixed(x, *params))/yerr)**2)
+
+
+def plot_final_walker_params(walker_ends, file_name, color1="xkcd:pink", color2="xkcd:rose"):
+    '''
+    Pairplot of the parameters the walkers ended on.
+    '''
+    df = pd.DataFrame(walker_ends, columns=["awm", "amw", "sm"])
+    g = sns.pairplot(df, diag_kind="kde", plot_kws={"color":color1}, diag_kws={"color":color2})
+    g.map_lower(sns.kdeplot, levels=4, color=color2)
+    plt.savefig(f"mcmc_{file_name}.png", transparent=True)
+    plt.close()
+
+
+def get_best_params(walker_ends, xdata, true_ydata):
+    '''
+    Filter the walker end params to only be ones that best fit the true curve.
+    '''
+    new_ends = []
+    for params in walker_ends:
+        ydata = fokker_planck_fixed(xdata, *params)
+        res1 = np.sum((true_ydata/max(true_ydata) - ydata/max(ydata))**2)
+        res2 = np.sum((true_ydata - ydata)**2)
+        if res1 < 1e-5:
+            new_ends.append(params)
+        print(f"{[round(x,2) for x in params]}\t{res1}\t{res2}")
+    return new_ends
+
+
+def plot_curves(walker_ends, xdata, true_ydata, file_name):
+    '''
+    Visualize curves resulting from walker end parameters.
+    '''
+    fig, ax = plt.subplots()
+    for params in walker_ends:
+        ydata = fokker_planck_fixed(xdata, *params)
+        ax.plot(xdata, ydata, alpha=0.5, label=[round(x, 2) for x in params])
+    ax.plot(xdata, true_ydata, color="black", ls="--")
+    fig.legend(bbox_to_anchor=(1.2, 1))
+    fig.patch.set_alpha(0)
+    fig.savefig(f"mcmc_{file_name}.png", bbox_inches="tight")
 
 
 def main(params):
@@ -63,38 +88,21 @@ def main(params):
     yerr = 0.05*ydata
 
     nwalkers = 50
-    niter = 100
+    niter = 200
     initial = (0, 0, 0)
     ndim = len(true_params)
-    p0 = [np.array(initial) + 1e-7*np.random.randn(ndim) for i in range(nwalkers)]
+    p0 = [np.array(initial) + 0.1*np.random.randn(ndim) for _ in range(nwalkers)]
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(xdata, ydata, yerr))
     sampler.run_mcmc(p0, niter)
-    samples = sampler.flatchain
-    probs = sampler.flatlnprobability
+    walker_ends = sampler.get_chain(discard=niter-1)[0,:,:]
 
-    order = np.flipud(probs.argsort())
-    top_samples = samples[order]
-    unique_samples = []
-
-    fig, ax = plt.subplots()
-    ax.plot(xdata, ydata/max(ydata), color="black", ls="--")
-    for i in range(100):
-        sample = top_samples[i]
-        is_unique = True
-        for unique_sample in unique_samples:
-            if np.allclose(sample, unique_sample, rtol=1e-3, atol=1e-5):
-                is_unique = False
-                break
-        if not is_unique:
-            continue
-        y = fokker_planck_fixed(xdata, *sample)
-        ax.plot(xdata, y/max(y), alpha=1, label=[round(x, 2) for x in sample])
-        unique_samples.append(sample)
-        if len(unique_samples) == 10:
-            break
-    fig.legend()
-    fig.savefig("mcmc.png")
+    title = "_".join([f"{param_names[i]}={params[i]}" for i in range(len(params))])
+    plot_final_walker_params(walker_ends, f"all_{title}")
+    best_walker_ends = get_best_params(walker_ends, xdata, ydata)
+    if len(best_walker_ends) > 0:
+        plot_final_walker_params(best_walker_ends, f"best_{title}")
+    plot_curves(walker_ends, xdata, ydata, f"curves_{title}")
 
 
 if __name__ == "__main__":
