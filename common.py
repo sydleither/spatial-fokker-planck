@@ -44,8 +44,11 @@ def fokker_planck(x, n, mu, awm, amw, sm):
         fx = (((1+sm)*awm+(1+awm)*amw)/awm**2)*np.log(1+awm*x) - ((awm+amw)/awm)*x
     phi = (1-2*n*mu)*np.log(x*(1-x)) - 2*n*fx - np.log(2*n)
     rho = np.exp(-phi)
-    #rho = -phi
-    # print(f"({mu}, {awm}, {amw}, {sm})")
+    rho = rho / max(rho)
+    if np.any(rho < 1e-31):
+        return np.zeros(len(x))
+    # rho = rho / (np.sum(rho)*x[0])
+    # print(f"{rho} ({n}, {mu}, {awm}, {amw}, {sm})")
     # print(list((rho)[0::10]))
     # print()
     return rho
@@ -62,7 +65,7 @@ def calculate_fp_params(a, b, c, d):
     return awm, amw, sm
 
 
-def classify_game(awm, amw, sm):
+def classify_game(awm, amw, sm, return_params=False):
     '''
     Convert from FP terms to game quadrant
     '''
@@ -70,6 +73,7 @@ def classify_game(awm, amw, sm):
     b = awm
     c = sm+amw
     d = sm
+
     if a > c and b > d:
         game = "sensitive_wins"
     elif c > a and b > d:
@@ -80,4 +84,7 @@ def classify_game(awm, amw, sm):
         game = "resistant_wins"
     else:
         game = "unknown"
+
+    if return_params:
+        return game, a, b, c, d
     return game
