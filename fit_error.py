@@ -7,26 +7,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import least_squares
 
-from common import classify_game, fokker_planck, game_colors, param_names
-
-
-n = 0
-mu = 0
-def fokker_planck_fixed(x, awm, amw, s):
-    '''
-    The Fokker-Planck equation with a fixed N and mu
-    '''
-    return fokker_planck(x, n, mu, awm, amw, s)
+from common import classify_game, game_colors
+from fokker_planck import FokkerPlanck, param_names
 
 
 global_param_history = []
-def residuals_callback(param_set, xdata, ydata):
+def residuals_callback(param_set, xdata, ydata, fp):
     '''
     Get error between true params and estimated params, to plug into scipy least_squares
     Also tracks the params least_squares tries as it optimizes
     '''
     global_param_history.append(param_set.copy())
-    return fokker_planck_fixed(xdata, *param_set) - ydata
+    return fp(xdata, *param_set) - ydata
 
 
 def format_vals(vals):
@@ -44,18 +36,19 @@ def main(params):
     Compare solver-estimated params to true params
     Plot resulting curves and solver search process
     '''
-    global global_param_history, n, mu
+    global global_param_history
     params = [float(x) for x in params]
     n = int(params[0])
     mu = params[1]
     true_params = params[2:]
+    fp = FokkerPlanck(n, mu).fokker_planck
     xdata = np.linspace(0.01, 0.99, n)
-    ydata = fokker_planck(xdata, n, mu, *true_params)
+    ydata = fp(xdata, *true_params)
 
-    result = least_squares(residuals_callback, (0, 0, 0), args=(xdata, ydata), bounds=(-0.5, 0.5))
+    result = least_squares(residuals_callback, (0, 0, 0), args=(xdata, ydata, fp), bounds=(-0.5, 0.5))
     est_params = result.x
 
-    estimated = fokker_planck_fixed(xdata, *est_params)
+    estimated = fp(xdata, *est_params)
     param_histories = list(zip(*global_param_history.copy()))
 
     param_colors = ["#75bbfd", "#bf77f6", "#f7879a"]
