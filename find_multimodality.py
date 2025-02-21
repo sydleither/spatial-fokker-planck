@@ -3,69 +3,20 @@ Use MCMC to find fokker-planck curves that fit multiple parameter sets
 '''
 import sys
 
-import emcee
 import numpy as np
-import matplotlib.cm as cm
+from matplotlib import cm
 from matplotlib.colors import BoundaryNorm
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from common import fokker_planck
+from fokker_planck import FokkerPlanck
+from mcmc_utils import mcmc
 
 
-n = 0
-mu = 0
-def fokker_planck_fixed(x, awm, amw, sm):
+def plot_variance(save_loc, file_name, data):
     '''
-    The Fokker-Planck equation with a fixed N and mu
+    Plot the variance of mcmc walker endpoints across awm, amw, sm.
     '''
-    return fokker_planck(x, n, mu, awm, amw, sm)
-
-
-def lnprob(params, x, y, yerr):
-    '''
-    Return chi-squared log likelihood if the priors are satisfied
-    '''
-    params = np.array(params)
-    if np.any(params > 1) or np.any(params < -1):
-        return -np.inf
-    return -0.5*np.sum(((y-fokker_planck_fixed(x, *params))/yerr)**2)
-
-
-def main(params):
-    '''
-    Given N and mu, iterate over amw, amw, and sm
-    To see if any resulting curves have multimodal param sets that fit
-    '''
-    global n, mu
-    n = int(params[0])
-    mu = float(params[1])
-    xdata = np.linspace(0.01, 0.99, n)
-
-    nwalkers = 50
-    niter = 200
-    initial = (0, 0, 0)
-    ndim = 3
-    p0 = [np.array(initial) + 0.1*np.random.randn(ndim) for _ in range(nwalkers)]
-
-    a_vals = np.arange(-0.1, 0.11, 0.01)
-    sm_vals = np.arange(-0.05, 0.051, 0.05)
-    data = []
-    for awm in a_vals:
-        awm = round(awm, 2)
-        for amw in a_vals:
-            amw = round(amw, 2)
-            for sm in sm_vals:
-                sm = round(sm, 2)
-                print(n, mu, awm, amw, sm)
-                ydata = fokker_planck_fixed(xdata, awm, amw, sm)
-                yerr = 0.05*ydata
-                sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(xdata, ydata, yerr))
-                sampler.run_mcmc(p0, niter)
-                walker_ends = sampler.get_chain(discard=niter-1)[0,:,:]
-                var = np.mean(np.var(np.array(walker_ends), axis=0))
-                data.append({"awm":awm, "amw":amw, "sm":sm, "var":var})
-
     df = pd.DataFrame(data)
     sms = df["sm"].unique()
     min_var = df["var"].min()
@@ -81,7 +32,36 @@ def main(params):
     fig.supxlabel("amw")
     fig.supylabel("awm")
     fig.patch.set_alpha(0.0)
-    fig.savefig(f"mcmc_var_N={n}_mu={mu}.png", bbox_inches="tight")
+    fig.savefig(f"{save_loc}/mcmc_var_{file_name}.png", bbox_inches="tight")
+
+
+def main(params):
+    '''
+    Given N and mu, iterate over amw, amw, and sm
+    To see if any resulting curves have multimodal param sets
+    '''
+    n = int(params[0])
+    mu = float(params[1])
+
+    save_loc = "."
+    fp = FokkerPlanck(n, mu).fokker_planck
+    xdata = np.linspace(0.01, 0.99, n)
+
+    a_vals = np.arange(-0.1, 0.11, 0.01)
+    sm_vals = np.arange(-0.05, 0.051, 0.05)
+    data = []
+    for awm in a_vals:
+        awm = round(awm, 2)
+        for amw in a_vals:
+            amw = round(amw, 2)
+            for sm in sm_vals:
+                sm = round(sm, 2)
+                ydata = fp(xdata, awm, amw, sm)
+                walker_ends = mcmc(fp, xdata, ydata)
+                var = np.mean(np.var(np.array(walker_ends), axis=0))
+                data.append({"awm":awm, "amw":amw, "sm":sm, "var":var})
+
+    plot_variance(save_loc, f"N={n}_mu={mu}", data)
 
 
 if __name__ == "__main__":

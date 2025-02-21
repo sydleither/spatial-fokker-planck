@@ -29,7 +29,7 @@ def classify_game(a, b, c, d):
     return game
 
 
-def phase_space():
+def phase_space(save_loc):
     '''
     Plot sample phase spaces
     '''
@@ -49,11 +49,11 @@ def phase_space():
         for t in timepoints:
             y = replicator(t, a, b, c, d)
             y_results.append(y)
-        ax[i].plot(timepoints, y_results)
-        ax[i].scatter([0, 1, xstar], [0, 0, 0], color="hotpink", zorder=5)
+        ax[i].plot(timepoints, y_results, color="hotpink")
+        ax[i].scatter([0, 1, xstar], [0, 0, 0], color="forestgreen", zorder=5)
         ax[i].set(title=classify_game(a,b,c,d), xlabel="x", ylabel="dx/dt")
     fig.tight_layout()
-    fig.savefig("phase_spaces.png", bbox_inches="tight")
+    fig.savefig(f"{save_loc}/phase_spaces.png", bbox_inches="tight")
 
 
 def check_stability(x, a, b, c, d):
@@ -62,15 +62,14 @@ def check_stability(x, a, b, c, d):
     '''
     neg_epsilon = replicator(x-0.01, a, b, c, d)
     pos_epsilon = replicator(x+0.01, a, b, c, d)
-    if neg_epsilon > 0 and pos_epsilon < 0:
+    if pos_epsilon < 0 < neg_epsilon:
         return 1
-    elif neg_epsilon < 0 and pos_epsilon > 0:
+    if neg_epsilon < 0 < pos_epsilon:
         return -1
-    else:
-        return 0
+    return 0
 
 
-def plot_stability(x, y, zero_stable, int_stable, one_stable, file_name, xlabel, ylabel):
+def plot_stability(save_loc, file_name, x, y, zero_stable, int_stable, one_stable, xlabel, ylabel):
     '''
     Plot stability of x=0, x=x*, x=1 equilibria
     '''
@@ -86,10 +85,10 @@ def plot_stability(x, y, zero_stable, int_stable, one_stable, file_name, xlabel,
         ax[i].axvline(0, c="black")
     fig.colorbar(points)
     fig.tight_layout()
-    fig.savefig(f"{file_name}.png")
+    fig.savefig(f"{save_loc}/{file_name}.png")
 
 
-def stability():
+def stability(save_loc):
     '''
     Plot stability of equilibria of the replicator equation with varying a,b,c,d
     '''
@@ -112,10 +111,11 @@ def stability():
                         int_stable.append(check_stability(int_eq, a, b, c, d))
                     zero_stable.append(check_stability(0, a, b, c, d))
                     one_stable.append(check_stability(1, a, b, c, d))
-    plot_stability(x, y, zero_stable, int_stable, one_stable, "stability", "c-a", "b-d")
+    plot_stability(save_loc, "stability", x, y, zero_stable,
+                   int_stable, one_stable, "c-a", "b-d")
 
 
-def stability_transformed(sm):
+def stability_transformed(save_loc, sm):
     '''
     Plot stability of equilibria of the transformed replicator equation with varying awm, amw, sm
     '''
@@ -140,10 +140,19 @@ def stability_transformed(sm):
                 int_stable.append(check_stability(int_eq, a, b, c, d))
             zero_stable.append(check_stability(0, a, b, c, d))
             one_stable.append(check_stability(1, a, b, c, d))
-    plot_stability(x, y, zero_stable, int_stable, one_stable,
-                   f"stability_{sm}sm", "amw/sm", "awm/sm")
+    plot_stability(save_loc, f"stability_{sm}sm", x, y, zero_stable,
+                   int_stable, one_stable, "amw/sm", "awm/sm")
 
 
-phase_space()
-stability()
-stability_transformed(0.05)
+def main():
+    '''
+    Plot explanatory figures.
+    '''
+    save_loc = "."
+    phase_space(save_loc)
+    stability(save_loc)
+    stability_transformed(save_loc, 0.05)
+
+
+if __name__ == "__main__":
+    main()

@@ -7,7 +7,8 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-from common import classify_game, fokker_planck, game_colors, param_names
+from common import classify_game, game_colors
+from fokker_planck import FokkerPlanck, param_names
 
 
 def visualize_curve(params, x, y):
@@ -32,9 +33,12 @@ def main(params):
     Visualize FP based on input parameters.
     '''
     params = [float(x) for x in params]
-    params[0] = int(params[0])
-    x = np.linspace(0.01, 0.99, params[0])
-    y = fokker_planck(x, *params)
+    n = int(params[0])
+    mu = params[1]
+
+    fp = FokkerPlanck(n, mu).fokker_planck
+    x = np.linspace(0.01, 0.99, n)
+    y = fp(x, *params)
     visualize_curve(params, x, y)
 
 
