@@ -19,7 +19,6 @@ def visualize_curve(params, x, y):
     fig, ax = plt.subplots(figsize=(5, 5))
     classified_game = classify_game(params[2], params[3], params[4])
     ax.plot(x, y/max(y), color=game_colors[classified_game], linewidth=3)
-    ax.set(xlim=(0,1), ylim=(0,1))
     ax.set(title=" ".join(title))
     fig.supxlabel("Fraction Mutant")
     fig.supylabel("Probability Density")
@@ -36,9 +35,9 @@ def main(params):
     n = int(params[0])
     mu = params[1]
 
-    fp = FokkerPlanck(n, mu).fokker_planck
+    fp = FokkerPlanck(n, mu).fokker_planck_density
     x = np.linspace(0.01, 0.99, n)
-    y = fp(x, *params)
+    y = fp(x, *params[2:])
     visualize_curve(params, x, y)
 
 
