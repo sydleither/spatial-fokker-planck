@@ -1,6 +1,7 @@
-'''
+"""
 Use MCMC to find fokker-planck curves that fit multiple parameter sets
-'''
+"""
+
 import sys
 
 import numpy as np
@@ -14,17 +15,17 @@ from mcmc_utils import mcmc
 
 
 def plot_variance(save_loc, file_name, data):
-    '''
+    """
     Plot the variance of mcmc walker endpoints across awm, amw, sm.
-    '''
+    """
     df = pd.DataFrame(data)
     sms = df["sm"].unique()
     min_var = df["var"].min()
     max_var = df["var"].max()
-    fig, ax = plt.subplots(1, len(sms), figsize=(5*len(sms), 4))
+    fig, ax = plt.subplots(1, len(sms), figsize=(5 * len(sms), 4))
     cmap = plt.get_cmap("Greens")
     norm = BoundaryNorm(np.linspace(min_var, max_var, 10), cmap.N)
-    for i,sm in enumerate(sms):
+    for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
         ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["var"], cmap=cmap, norm=norm)
         ax[i].set(title=f"sm={sm}")
@@ -36,10 +37,10 @@ def plot_variance(save_loc, file_name, data):
 
 
 def main(params):
-    '''
+    """
     Given N and mu, iterate over amw, amw, and sm
     To see if any resulting curves have multimodal param sets
-    '''
+    """
     n = int(params[0])
     mu = float(params[1])
 
@@ -59,7 +60,7 @@ def main(params):
                 ydata = fp(xdata, awm, amw, sm)
                 walker_ends = mcmc(fp, xdata, ydata)
                 var = np.mean(np.var(np.array(walker_ends), axis=0))
-                data.append({"awm":awm, "amw":amw, "sm":sm, "var":var})
+                data.append({"awm": awm, "amw": amw, "sm": sm, "var": var})
 
     plot_variance(save_loc, f"N={n}_mu={mu}", data)
 

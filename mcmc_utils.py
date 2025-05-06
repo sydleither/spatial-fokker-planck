@@ -1,7 +1,8 @@
-'''
+"""
 Functions for running MCMC
 Based on https://prappleizer.github.io/Tutorials/MCMC/MCMC_Tutorial.html
-'''
+"""
+
 import emcee
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,21 +13,29 @@ from common import calculate_fp_params, classify_game, game_colors
 
 
 def gamespace_plot(ax, df, x, y, truex, truey, xline=0, yline=0):
-    '''
+    """
     Make a gamespace plot at the given axis.
-    '''
-    sns.scatterplot(data=df, x=x, y=y, hue="game", ax=ax, legend=False,
-                    hue_order=game_colors.keys(), palette=game_colors.values())
+    """
+    sns.scatterplot(
+        data=df,
+        x=x,
+        y=y,
+        hue="game",
+        ax=ax,
+        legend=False,
+        hue_order=game_colors.keys(),
+        palette=game_colors.values(),
+    )
     sns.kdeplot(data=df, x=x, y=y, color="gray", alpha=0.3, ax=ax)
     ax.axvline(xline, color="black", lw=0.5)
     ax.axhline(yline, color="black", lw=0.5)
     ax.scatter([truex], [truey], marker="*", color="black")
 
 
-def plot_walker_gamespace(save_loc, file_name, walker_ends, true_params):
-    '''
+def plot_walker_gamespace(save_loc, walker_ends, true_params):
+    """
     Plots of the final walker params on the Fokker-Planck transformed and normal game spaces.
-    '''
+    """
     if len(true_params) == 3:
         awm, amw, sm = true_params
         _, a, b, c, d = classify_game(*true_params, return_params=True)
@@ -46,31 +55,31 @@ def plot_walker_gamespace(save_loc, file_name, walker_ends, true_params):
     df["b-d"] = df["b"] - df["d"]
 
     fig, ax = plt.subplots(1, 2, figsize=(8, 4))
-    gamespace_plot(ax[0], df, "amw/sm", "awm/sm", amw/sm, awm/sm, -1, 1)
-    gamespace_plot(ax[1], df, "c-a", "b-d", c-a, b-d, 0, 0)
+    gamespace_plot(ax[0], df, "amw/sm", "awm/sm", amw / sm, awm / sm, -1, 1)
+    gamespace_plot(ax[1], df, "c-a", "b-d", c - a, b - d, 0, 0)
     fig.tight_layout()
     fig.patch.set_alpha(0)
-    fig.savefig(f"{save_loc}/mcmc_gamespace_{file_name}.png", bbox_inches="tight")
+    fig.savefig(f"{save_loc}/mcmc_gamespace.png", bbox_inches="tight")
     plt.close()
 
 
-def plot_walker_params(save_loc, file_name, walker_ends):
-    '''
+def plot_walker_params(save_loc, walker_ends):
+    """
     Pairplot of the parameters the walkers ended on.
-    '''
-    color1="xkcd:pink"
-    color2="xkcd:rose"
+    """
+    color1 = "xkcd:pink"
+    color2 = "xkcd:rose"
     df = pd.DataFrame(walker_ends, columns=["awm", "amw", "sm"])
-    g = sns.pairplot(df, diag_kind="kde", plot_kws={"color":color1}, diag_kws={"color":color2})
+    g = sns.pairplot(df, diag_kind="kde", plot_kws={"color": color1}, diag_kws={"color": color2})
     g.map_lower(sns.kdeplot, levels=4, color=color2)
-    plt.savefig(f"{save_loc}/mcmc_params_{file_name}.png", transparent=True)
+    plt.savefig(f"{save_loc}/mcmc_params.png", transparent=True)
     plt.close()
 
 
-def plot_walker_curves(save_loc, file_name, func, walker_ends, xdata, true_ydata):
-    '''
+def plot_walker_curves(save_loc, func, walker_ends, xdata, true_ydata):
+    """
     Visualize curves resulting from walker end parameters.
-    '''
+    """
     fig, ax = plt.subplots()
     for params in walker_ends:
         ydata = func(xdata, *params)
@@ -79,31 +88,31 @@ def plot_walker_curves(save_loc, file_name, func, walker_ends, xdata, true_ydata
     ax.plot(xdata, true_ydata, color="black", ls="--")
     ax.set(xlabel="Fraction Mutant", ylabel="Probability Density")
     fig.patch.set_alpha(0)
-    fig.savefig(f"{save_loc}/mcmc_curves_{file_name}.png", bbox_inches="tight")
+    fig.savefig(f"{save_loc}/mcmc_curves.png", bbox_inches="tight")
     plt.close()
 
 
 def lnprob(params, func, x, y, yerr):
-    '''
+    """
     Return chi-squared log likelihood, if the priors are satisfied.
-    '''
+    """
     params = np.array(params)
     if np.any(params > 1) or np.any(params < -1):
         return -np.inf
-    return -0.5*np.sum(((y-func(x, *params))/yerr)**2)
+    return -0.5 * np.sum(((y - func(x, *params)) / yerr) ** 2)
 
 
 def mcmc(func, xdata, ydata, nwalkers=50, niter=500):
-    '''
+    """
     Run MCMC on true xdata, ydata and return walker end locations.
-    '''
-    yerr = 0.05*ydata
+    """
+    yerr = 0.05 * ydata
     initial = (0, 0, 0)
     ndim = 3
-    p0 = [np.array(initial) + 0.1*np.random.randn(ndim) for _ in range(nwalkers)]
+    p0 = [np.array(initial) + 0.1 * np.random.randn(ndim) for _ in range(nwalkers)]
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(func, xdata, ydata, yerr))
     sampler.run_mcmc(p0, niter)
-    walker_ends = sampler.get_chain(discard=niter-1)[0,:,:]
+    walker_ends = sampler.get_chain(discard=niter - 1)[0, :, :]
 
     return walker_ends
