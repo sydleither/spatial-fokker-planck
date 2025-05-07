@@ -6,9 +6,9 @@ import sys
 
 import numpy as np
 
+from common import get_data_path
 from fokker_planck import FokkerPlanck, param_names
 from mcmc_utils import mcmc, plot_walker_curves, plot_walker_gamespace, plot_walker_params
-from common import get_data_path
 
 
 def main(params):

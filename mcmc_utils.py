@@ -99,7 +99,7 @@ def lnprob(params, func, x, y, yerr):
     params = np.array(params)
     if np.any(params > 1) or np.any(params < -1):
         return -np.inf
-    return -0.5 * np.sum(((y - func(x, *params)) / yerr) ** 2)
+    return -0.5 * np.sum(((y - func(x, *params)) / yerr)**2)
 
 
 def mcmc(func, xdata, ydata, nwalkers=50, niter=500):

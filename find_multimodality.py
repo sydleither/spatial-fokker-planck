@@ -6,34 +6,40 @@ import sys
 
 import numpy as np
 from matplotlib import cm
-from matplotlib.colors import BoundaryNorm
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
-from fokker_planck import FokkerPlanck
+from common import get_data_path
+from fokker_planck import FokkerPlanck, param_names
 from mcmc_utils import mcmc
 
 
-def plot_variance(save_loc, file_name, data):
+def plot_metric(save_loc, data, metric):
     """
     Plot the variance of mcmc walker endpoints across awm, amw, sm.
     """
     df = pd.DataFrame(data)
     sms = df["sm"].unique()
-    min_var = df["var"].min()
-    max_var = df["var"].max()
-    fig, ax = plt.subplots(1, len(sms), figsize=(5 * len(sms), 4))
-    cmap = plt.get_cmap("Greens")
-    norm = BoundaryNorm(np.linspace(min_var, max_var, 10), cmap.N)
+    fig, ax = plt.subplots(1, len(sms), figsize=(5 * len(sms), 6), constrained_layout=True)
+    cmap = sns.color_palette("flare", as_cmap=True)
+    norm = plt.Normalize(df[metric].min(), df[metric].max())
     for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
-        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["var"], cmap=cmap, norm=norm)
+        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm[metric], cmap=cmap, norm=norm)
         ax[i].set(title=f"sm={sm}")
-    fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax.ravel().tolist(), shrink=0.95)
+    cbar = fig.colorbar(
+        cm.ScalarMappable(norm=norm, cmap=cmap),
+        ax=ax.ravel().tolist(),
+        orientation="horizontal",
+        pad=0.1,
+    )
+    cbar.set_label(metric)
     fig.supxlabel("amw")
     fig.supylabel("awm")
     fig.patch.set_alpha(0.0)
-    fig.savefig(f"{save_loc}/mcmc_var_{file_name}.png", bbox_inches="tight")
+    fig.savefig(f"{save_loc}/mcmc_gamespaces_{metric}.png", bbox_inches="tight")
+    plt.close()
 
 
 def main(params):
@@ -44,25 +50,41 @@ def main(params):
     n = int(params[0])
     mu = float(params[1])
 
-    save_loc = "."
-    fp = FokkerPlanck(n, mu).fokker_planck
+    fp = FokkerPlanck(n, mu).fokker_planck_log
     xdata = np.linspace(0.01, 0.99, n)
+    len_data = len(xdata)
 
-    a_vals = np.arange(-0.1, 0.11, 0.01)
-    sm_vals = np.arange(-0.05, 0.051, 0.05)
+    a_vals = np.round(np.arange(-0.1, 0.11, 0.01), 2)
+    sm_vals = [-0.075, -0.05, -0.025, 0.025, 0.05, 0.075]
     data = []
     for awm in a_vals:
-        awm = round(awm, 2)
         for amw in a_vals:
-            amw = round(amw, 2)
             for sm in sm_vals:
-                sm = round(sm, 2)
                 ydata = fp(xdata, awm, amw, sm)
-                walker_ends = mcmc(fp, xdata, ydata)
-                var = np.mean(np.var(np.array(walker_ends), axis=0))
-                data.append({"awm": awm, "amw": amw, "sm": sm, "var": var})
+                walker_ends = np.array(mcmc(fp, xdata, ydata))
+                var = np.var(walker_ends, axis=0)
+                distances = np.linalg.norm(walker_ends - np.array([awm, amw, sm]), axis=1)
+                mse = []
+                for walker_params in walker_ends:
+                    mse.append(np.sum((ydata - fp(xdata, *walker_params)) ** 2) / len_data)
+                data.append(
+                    {
+                        "awm": awm,
+                        "amw": amw,
+                        "sm": sm,
+                        "params_mean_distance": np.mean(distances),
+                        "params_var_distance": np.var(distances),
+                        "params_mean_var": np.mean(var),
+                        "mean_mse": np.mean(mse),
+                        "max_mse": np.max(mse),
+                    }
+                )
 
-    plot_variance(save_loc, f"N={n}_mu={mu}", data)
+    params_str = "_".join([f"{param_names[i]}={params[i]}" for i in range(len(params))])
+    save_loc = get_data_path("self", params_str)
+    metrics = [x for x in data[0].keys() if x not in ["awm", "amw", "sm"]]
+    for metric in metrics:
+        plot_metric(save_loc, data, metric)
 
 
 if __name__ == "__main__":

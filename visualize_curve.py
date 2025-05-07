@@ -8,24 +8,24 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-from common import classify_game, game_colors
+from common import classify_game, game_colors, get_data_path
 from fokker_planck import FokkerPlanck, param_names
 
 
-def visualize_curve(params, x, y):
+def visualize_curve(save_loc, params, x, y):
     """
     Visualize the FP solution
     """
     title = [f"{param_names[i]}={params[i]}" for i in range(len(params))]
     fig, ax = plt.subplots(figsize=(5, 5))
     classified_game = classify_game(params[2], params[3], params[4])
-    ax.plot(x, y, color=game_colors[classified_game], linewidth=3)
+    ax.plot(x, np.exp(-y), color=game_colors[classified_game], linewidth=3)
     ax.set(title=" ".join(title))
     fig.supxlabel("Fraction Mutant")
     fig.supylabel("Probability Density")
     fig.tight_layout()
     fig.patch.set_alpha(0)
-    fig.savefig(f"fp_{'_'.join(title)}.png", bbox_inches="tight")
+    fig.savefig(f"{save_loc}/curve.png", bbox_inches="tight")
 
 
 def main(params):
@@ -36,10 +36,13 @@ def main(params):
     n = int(params[0])
     mu = params[1]
 
-    fp = FokkerPlanck(n, mu).fokker_planck_density
+    fp = FokkerPlanck(n, mu).fokker_planck_log
     x = np.linspace(0.01, 0.99, n)
     y = fp(x, *params[2:])
-    visualize_curve(params, x, y)
+
+    params_str = "_".join([f"{param_names[i]}={params[i]}" for i in range(len(params))])
+    save_loc = get_data_path("self", params_str)
+    visualize_curve(save_loc, params, x, y)
 
 
 if __name__ == "__main__":

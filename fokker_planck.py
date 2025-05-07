@@ -27,9 +27,9 @@ class FokkerPlanck:
         if awm == 0:
             fx = sm * x
         else:
-            fx = (((1 + sm) * awm + (1 + awm) * amw) / awm**2) * np.log(1 + awm * x) - ((awm + amw) / awm) * x
-        phi = (1 - 2 * n * mu) * np.log(x * (1 - x)) - 2 * n * fx - np.log(2 * n)
-        rho = np.exp(-phi)
+            fx = ((((1+sm)*awm + (1+awm)*amw)/awm**2) * np.log(1+awm*x)) - ((awm+amw)/awm)*x
+        phi = (1 - 2*n*mu) * np.log(x*(1-x)) - 2*n*fx
+        rho = 2*n*np.exp(-phi)
         return rho
 
     def fokker_planck_verbose(self, x, awm, amw, sm):
@@ -48,8 +48,6 @@ class FokkerPlanck:
         """
         rho = self.fokker_planck(x, awm, amw, sm)
         rho = rho / max(rho)
-        rho[rho < 1e-31] = 0
-        rho[rho > 1e31] = 1e31
         return rho
 
     def fokker_planck_density(self, x, awm, amw, sm):
@@ -59,3 +57,17 @@ class FokkerPlanck:
         rho = self.fokker_planck(x, awm, amw, sm)
         rho = rho / (np.sum(rho) * x[0])
         return rho
+
+    def fokker_planck_log(self, x, awm, amw, sm, c=0):
+        """
+        Return the negative log-space phi.
+        """
+        n = self.n
+        mu = self.mu
+        if awm == 0:
+            fx = sm * x
+        else:
+            fx = ((((1+sm)*awm + (1+awm)*amw)/awm**2) * np.log(1+awm*x)) - ((awm+amw)/awm)*x
+        phi = (1 - 2*n*mu) * np.log(x*(1-x)) - 2*n*fx - np.log(2*n)
+        neg_lnrho = c + phi
+        return neg_lnrho

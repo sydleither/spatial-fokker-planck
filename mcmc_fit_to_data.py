@@ -8,9 +8,9 @@ import sys
 import numpy as np
 import pandas as pd
 
+from common import get_data_path
 from fokker_planck import FokkerPlanck
 from mcmc_utils import mcmc, plot_walker_curves, plot_walker_gamespace, plot_walker_params
-from common import get_data_path
 
 
 def create_sfp_dist(df, bins, sample_length, num_samples=1000):
