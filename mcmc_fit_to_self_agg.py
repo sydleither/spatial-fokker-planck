@@ -25,7 +25,7 @@ def plot_metric(save_loc, df, metric):
     norm = plt.Normalize(df[metric].min(), df[metric].max())
     for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
-        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm[metric], s=60, cmap=cmap, norm=norm)
+        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm[metric], s=80, cmap=cmap, norm=norm)
         ax[i].set(title=f"sm={sm}")
     cbar = fig.colorbar(
         cm.ScalarMappable(norm=norm, cmap=cmap),
@@ -51,7 +51,7 @@ def main(params):
     len_data = len(xdata)
 
     a_vals = np.round(np.arange(-0.5, 0.51, 0.05), 2)
-    sm_vals = [-0.075, -0.05, -0.025, 0.025, 0.05, 0.075]
+    sm_vals = [0, 0.05, 0.1]
     data = []
     for awm in a_vals:
         for amw in a_vals:

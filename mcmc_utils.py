@@ -99,6 +99,8 @@ def lnprob(params, func, x, y, yerr):
     params = np.array(params)
     if np.any(params > 1) or np.any(params < -1):
         return -np.inf
+    if params[2] < 0:
+        return -np.inf
     return -0.5 * np.sum(((y - func(x, *params)) / yerr)**2)
 
 
@@ -107,7 +109,7 @@ def mcmc(func, xdata, ydata, nwalkers=50, niter=500):
     Run MCMC on true xdata, ydata and return walker end locations.
     """
     yerr = 0.05 * ydata
-    initial = (0, 0, 0)
+    initial = (0, 0, 0.5)
     ndim = 3
     p0 = [np.array(initial) + 0.1 * np.random.randn(ndim) for _ in range(nwalkers)]
 

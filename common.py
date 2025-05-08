@@ -45,10 +45,10 @@ def classify_game(awm, amw, sm, return_params=False):
     """
     Convert from FP terms to game quadrant
     """
-    a = 0
-    b = awm
-    c = sm + amw
-    d = sm
+    a = 1
+    b = 1 + awm
+    c = 1 + sm + amw
+    d = 1 + sm
 
     if a > c and b > d:
         game = "sensitive_wins"
