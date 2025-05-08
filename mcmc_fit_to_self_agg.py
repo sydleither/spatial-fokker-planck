@@ -58,7 +58,6 @@ def main(params):
             for sm in sm_vals:
                 ydata = fp(xdata, awm, amw, sm)
                 walker_ends = np.array(mcmc(fp, xdata, ydata))
-                var = np.var(walker_ends, axis=0)
                 distances = np.linalg.norm(walker_ends - np.array([awm, amw, sm]), axis=1)
                 mse = []
                 for walker_params in walker_ends:
@@ -68,11 +67,12 @@ def main(params):
                         "awm": awm,
                         "amw": amw,
                         "sm": sm,
-                        "params_mean_distance": np.mean(distances),
-                        "params_var_distance": np.var(distances),
-                        "params_mean_var": np.mean(var),
-                        "mean_mse": np.mean(mse),
-                        "min_mse": np.min(mse),
+                        "mean_param_distance": np.mean(distances),
+                        "var_param_distance": np.var(distances),
+                        "min_param_distance": np.min(distances),
+                        "mean_curve_mse": np.mean(mse),
+                        "var_curve_mse": np.var(mse),
+                        "min_curve_mse": np.min(mse),
                     }
                 )
 
