@@ -5,11 +5,46 @@ Based on https://prappleizer.github.io/Tutorials/MCMC/MCMC_Tutorial.html
 
 import emcee
 import numpy as np
+from matplotlib import cm
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
 from common import calculate_fp_params, classify_game, game_colors
+
+
+def plot_paramsweep(save_loc, df, metric):
+    """
+    Plot a metric across awm, amw, and sm.
+    """
+    sms = df["sm"].unique()
+    fig, ax = plt.subplots(1, len(sms), figsize=(5 * len(sms), 5), constrained_layout=True)
+    min_distance = df[metric].min()
+    max_distance = df[metric].max()
+    if min_distance < 0:
+        norm = mcolors.TwoSlopeNorm(vcenter=0, vmin=min_distance, vmax=max_distance)
+        cmap = plt.get_cmap("PuOr")
+    else:
+        norm = mcolors.Normalize(vmin=min_distance, vmax=max_distance)
+        cmap = plt.get_cmap("Purples")
+    scalarmap = cm.ScalarMappable(norm=norm, cmap=cmap)
+
+    awms = df["awm"].unique()
+    amws = df["amw"].unique()
+    for i,sm in enumerate(sms):
+        df_sm = df[df["sm"] == sm]
+        df_sm = df_sm.pivot(index="amw", columns="awm", values=metric)
+        ax[i].imshow(df_sm, cmap=cmap, norm=norm)
+        ax[i].set_xticks(range(0, len(amws), 5), labels=amws[0::5])
+        ax[i].set_yticks(range(0, len(awms), 5), labels=awms[0::5])
+    cbar = fig.colorbar(scalarmap, drawedges=False, ax=ax[-1])
+    cbar.set_label(metric)
+    fig.supxlabel("amw")
+    fig.supylabel("awm")
+    fig.patch.set_alpha(0.0)
+    fig.savefig(f"{save_loc}/{metric}.png", bbox_inches="tight")
+    plt.close()
 
 
 def gamespace_plot(ax, df, x, y, truex, truey, xline=0, yline=0):

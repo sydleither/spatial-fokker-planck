@@ -5,38 +5,11 @@ Use MCMC to find fokker-planck curves that fit multiple parameter sets
 import sys
 
 import numpy as np
-from matplotlib import cm
-import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 
 from common import get_data_path
 from fokker_planck import FokkerPlanck, param_names
-from mcmc_utils import mcmc
-
-
-def plot_metric(save_loc, df, metric):
-    """
-    Plot the aggregation of mcmc walker endpoints across awm, amw, sm.
-    """
-    sms = df["sm"].unique()
-    fig, ax = plt.subplots(1, len(sms), figsize=(5 * len(sms), 5), constrained_layout=True)
-    cmap = sns.color_palette("flare", as_cmap=True)
-    norm = plt.Normalize(df[metric].min(), df[metric].max())
-    for i, sm in enumerate(sms):
-        df_sm = df[df["sm"] == sm]
-        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm[metric], s=80, cmap=cmap, norm=norm)
-        ax[i].set(title=f"sm={sm}")
-    cbar = fig.colorbar(
-        cm.ScalarMappable(norm=norm, cmap=cmap),
-        ax=ax[-1]
-    )
-    cbar.set_label(metric)
-    fig.supxlabel("amw")
-    fig.supylabel("awm")
-    fig.patch.set_alpha(0.0)
-    fig.savefig(f"{save_loc}/mcmc_gamespaces_{metric}.png", bbox_inches="tight")
-    plt.close()
+from mcmc_utils import mcmc, plot_paramsweep
 
 
 def main(params):
@@ -81,7 +54,7 @@ def main(params):
     metrics = [x for x in data[0].keys() if x not in ["awm", "amw", "sm"]]
     df = pd.DataFrame(data)
     for metric in metrics:
-        plot_metric(save_loc, df, metric)
+        plot_paramsweep(save_loc, df, metric)
 
 
 if __name__ == "__main__":
