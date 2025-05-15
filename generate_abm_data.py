@@ -16,6 +16,7 @@ run_cmd: how to run the ABM samples
 
 import sys
 
+from common import get_data_path
 from EGT_HAL.config_utils import latin_hybercube_sample, write_config, write_run_scripts
 
 
@@ -23,16 +24,17 @@ def main(data_dir, experiment_name, num_samples, run_command):
     """
     Generate scripts to run the ABM
     """
+    data_dir = get_data_path(data_dir, "raw")
     space = "2D"
-    end_time = 72
+    end_time = 500
     grid_size = 500
 
     samples = latin_hybercube_sample(
         num_samples,
-        ["A", "B", "C", "D", "fr"],
-        [0.01, 0.01, 0.01, 0.01, 0.1],
-        [0.04, 0.04, 0.04, 0.04, 0.9],
-        [False, False, False, False, False],
+        ["A", "B", "C", "D"],
+        [0.0, 0.0, 0.0, 0.0],
+        [0.1, 0.1, 0.1, 0.1],
+        [False, False, False, False],
         seed=42,
     )
 
@@ -48,13 +50,13 @@ def main(data_dir, experiment_name, num_samples, run_command):
             config_name,
             seed,
             payoff,
-            int(0.01 * grid_size**2),
-            sample["fr"],
+            int(0.5 * grid_size**2),
+            0.5,
             x=grid_size,
             y=grid_size,
             interaction_radius=10,
             reproduction_radius=10,
-            write_freq=end_time,
+            write_freq=100,
             ticks=end_time,
         )
         run_output.append(f"{run_str} {config_name} {space} {seed}\n")
