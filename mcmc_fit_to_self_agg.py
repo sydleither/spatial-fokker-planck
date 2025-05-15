@@ -39,7 +39,7 @@ def main(params):
     xdata = np.linspace(0.01, 0.99, n)
     len_data = len(xdata)
 
-    a_vals = np.round(np.arange(-0.5, 0.51, 0.01), 2)
+    a_vals = np.round(np.arange(-0.5, 0.51, 0.05), 2)
     sm_vals = [0.025, 0.05, 0.075]
     data = []
     for awm in a_vals:
