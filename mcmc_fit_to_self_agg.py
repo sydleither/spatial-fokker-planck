@@ -45,12 +45,12 @@ def main(params):
     for awm in a_vals:
         for amw in a_vals:
             for sm in sm_vals:
-                ydata = fp(xdata, awm, amw, sm)
-                walker_ends = np.array(mcmc(fp, xdata, ydata))
+                true_ydata = fp(xdata, awm, amw, sm)
+                walker_ends = np.array(mcmc(fp, xdata, true_ydata))
                 param_distances = np.linalg.norm(walker_ends - np.array([awm, amw, sm]), axis=1)
                 mse = []
                 for walker_params in walker_ends:
-                    mse.append(np.sum((ydata - fp(xdata, *walker_params)) ** 2) / len_data)
+                    mse.append(np.sum((true_ydata - fp(xdata, *walker_params)) ** 2) / len_data)
                 regimes = regime_distances(mu, awm, amw, sm)
                 data.append(
                     {

@@ -47,7 +47,7 @@ def plot_paramsweep(save_loc, df, metric):
     plt.close()
 
 
-def gamespace_plot(ax, df, x, y, truex, truey, xline=0, yline=0):
+def gamespace_plot(ax, df, x, y, truex, truey):
     """
     Make a gamespace plot at the given axis.
     """
@@ -62,8 +62,6 @@ def gamespace_plot(ax, df, x, y, truex, truey, xline=0, yline=0):
         palette=game_colors.values(),
     )
     sns.kdeplot(data=df, x=x, y=y, color="gray", alpha=0.3, ax=ax)
-    ax.axvline(xline, color="black", lw=0.5)
-    ax.axhline(yline, color="black", lw=0.5)
     ax.scatter([truex], [truey], marker="*", color="black")
 
 
@@ -90,8 +88,8 @@ def plot_walker_gamespace(save_loc, walker_ends, true_params):
     df["b-d"] = df["b"] - df["d"]
 
     fig, ax = plt.subplots(1, 2, figsize=(8, 4))
-    gamespace_plot(ax[0], df, "amw/sm", "awm/sm", amw / sm, awm / sm, -1, 1)
-    gamespace_plot(ax[1], df, "c-a", "b-d", c - a, b - d, 0, 0)
+    gamespace_plot(ax[0], df, "amw/sm", "awm/sm", amw / sm, awm / sm)
+    gamespace_plot(ax[1], df, "c-a", "b-d", c - a, b - d)
     fig.tight_layout()
     fig.patch.set_alpha(0)
     fig.savefig(f"{save_loc}/mcmc_gamespace.png", bbox_inches="tight")
@@ -111,19 +109,53 @@ def plot_walker_params(save_loc, walker_ends):
     plt.close()
 
 
-def plot_walker_curves(save_loc, func, walker_ends, xdata, true_ydata):
+def plot_walker_curves(save_loc, func, walker_ends, xdata, true_ydata, logspace=True, density=True):
     """
     Visualize curves resulting from walker end parameters.
     """
     fig, ax = plt.subplots()
     for params in walker_ends:
         ydata = func(xdata, *params)
+        if logspace:
+            ydata = np.exp(-ydata)
+        if density:
+            ydata = ydata / (np.sum(ydata) * xdata[0])
         game = classify_game(*params)
         ax.plot(xdata, ydata, alpha=0.5, color=game_colors[game])
+    if logspace:
+        true_ydata = np.exp(-true_ydata)
+    if density:
+        true_ydata = true_ydata / (np.sum(true_ydata) * xdata[0])
     ax.plot(xdata, true_ydata, color="black", ls="--")
     ax.set(xlabel="Fraction Mutant", ylabel="Probability Density")
     fig.patch.set_alpha(0)
     fig.savefig(f"{save_loc}/mcmc_curves.png", bbox_inches="tight")
+    plt.close()
+
+
+def plot_walker_curve_mse(save_loc, func, walker_ends, xdata, true_ydata, logspace=True, density=False):
+    """
+    Histogram of the MSEs between each walker curve and the true curve
+    """
+    if logspace:
+        true_ydata = np.exp(-true_ydata)
+    if density:
+        true_ydata = true_ydata / (np.sum(true_ydata) * xdata[0])
+    len_data = len(true_ydata)
+    mse = []
+    for params in walker_ends:
+        ydata = func(xdata, *params)
+        if logspace:
+            ydata = np.exp(-ydata)
+        if density:
+            ydata = ydata / (np.sum(ydata) * xdata[0])
+        mse.append(np.sum((ydata-true_ydata)**2) / len_data)
+
+    fig, ax = plt.subplots()
+    ax.hist(mse, bins=[x/500 for x in range(0, 21)], density=False, color="gray")
+    ax.set(xlabel="MSE", ylabel="Count", ylim=(0, len(walker_ends)))
+    fig.patch.set_alpha(0)
+    fig.savefig(f"{save_loc}/mcmc_curves_mse.png", bbox_inches="tight")
     plt.close()
 
 

@@ -12,14 +12,18 @@ from common import classify_game, game_colors, get_data_path
 from fokker_planck import FokkerPlanck, param_names
 
 
-def visualize_curve(save_loc, params, x, y):
+def visualize_curve(save_loc, params, x, y, logspace=True, density=True):
     """
     Visualize the FP solution
     """
     title = [f"{param_names[i]}={params[i]}" for i in range(len(params))]
     fig, ax = plt.subplots(figsize=(5, 5))
     classified_game = classify_game(params[2], params[3], params[4])
-    ax.plot(x, np.exp(-y), color=game_colors[classified_game], linewidth=3)
+    if logspace:
+        y = np.exp(-y)
+    if density:
+        y = y / (np.sum(y) * x[0])
+    ax.plot(x, y, color=game_colors[classified_game], linewidth=3)
     ax.set(title=" ".join(title))
     fig.supxlabel("Fraction Mutant")
     fig.supylabel("Probability Density")
@@ -42,7 +46,7 @@ def main(params):
 
     params_str = "_".join([f"{param_names[i]}={params[i]}" for i in range(len(params))])
     save_loc = get_data_path("self", params_str)
-    visualize_curve(save_loc, params, x, y)
+    visualize_curve(save_loc, params, x, y, True)
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ from mcmc_utils import mcmc, plot_walker_curves, plot_walker_curve_mse, plot_wal
 
 def main(params):
     """
+    Test fitting when log-transforming FP vs not
     Given a set of params (N, mu, awm, amw, sm)
     Generate a distribution using Fokker-Planck equation with those params
     Give the distribution and Fokker-Planck equation to MCMC
@@ -22,15 +23,27 @@ def main(params):
     mu = params[1]
     true_params = params[2:]
 
+    # log U(x)
     fp = FokkerPlanck(n, mu).fokker_planck_log
     xdata = np.linspace(0.01, 0.99, n)
     ydata = fp(xdata, *true_params)
     walker_ends = mcmc(fp, xdata, ydata)
-
     params_str = "_".join([f"{param_names[i]}={params[i]}" for i in range(len(params))])
-    save_loc = get_data_path("self", params_str)
+    save_loc = get_data_path("self", params_str+"/log")
     plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata, True, True)
     plot_walker_curve_mse(save_loc, fp, walker_ends, xdata, ydata, True, True)
+    plot_walker_gamespace(save_loc, walker_ends, true_params)
+    plot_walker_params(save_loc, walker_ends)
+
+    # not log rho
+    fp = FokkerPlanck(n, mu).fokker_planck
+    xdata = np.linspace(0.01, 0.99, n)
+    ydata = fp(xdata, *true_params)
+    walker_ends = mcmc(fp, xdata, ydata)
+    params_str = "_".join([f"{param_names[i]}={params[i]}" for i in range(len(params))])
+    save_loc = get_data_path("self", params_str+"/notlog")
+    plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata, False, True)
+    plot_walker_curve_mse(save_loc, fp, walker_ends, xdata, ydata, False, True)
     plot_walker_gamespace(save_loc, walker_ends, true_params)
     plot_walker_params(save_loc, walker_ends)
 
