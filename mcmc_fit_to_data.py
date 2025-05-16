@@ -2,28 +2,30 @@
 Run MCMC on spatial data
 """
 
+import json
 from random import choices
 import sys
 
 import numpy as np
 import pandas as pd
+from scipy import stats
 
-from common import get_data_path
+from common import calculate_fp_params, get_data_path
 from fokker_planck import FokkerPlanck
-from mcmc_utils import mcmc, plot_walker_curves, plot_walker_gamespace, plot_walker_params
+from mcmc_utils import mcmc, plot_walker_curves, plot_walker_curve_mse, plot_walker_gamespace, plot_walker_pairplot, plot_walker_gameparams
 
 
-def create_sfp_dist(df, bins, sample_length, num_samples=1000):
+def get_data_pdf_and_support(df, sample_length, num_samples=5000):
     """
     Create spatial fokker-planck distribution.
     """
-    s_coords = df.loc[df["type"] == "sensitive"][["x", "y"]].values
-    r_coords = df.loc[df["type"] == "resistant"][["x", "y"]].values
+    s_coords = df.loc[df["type"] == 0][["x", "y"]].values
+    r_coords = df.loc[df["type"] == 1][["x", "y"]].values
 
     dims = range(len(s_coords[0]))
     max_dims = [max(np.max(s_coords[:, i]), np.max(r_coords[:, i])) for i in dims]
     dim_vals = [choices(range(0, max_dims[i] - sample_length), k=num_samples) for i in dims]
-    fs_counts = []
+    fr_counts = []
     for s in range(num_samples):
         ld = [dim_vals[i][s] for i in dims]
         ud = [ld[i] + sample_length for i in dims]
@@ -34,47 +36,42 @@ def create_sfp_dist(df, bins, sample_length, num_samples=1000):
         subset_total = subset_s + subset_r
         if subset_total == 0:
             continue
-        fs_counts.append(subset_r / subset_total)
+        fr_counts.append(subset_r / subset_total)
 
-    hist, _ = np.histogram(fs_counts, bins=bins)
-    hist = hist / max(hist)
-    return hist
+    xdata = np.linspace(min(fr_counts), max(fr_counts), 100)
+    kde = stats.gaussian_kde(fr_counts)
+    pdf = kde(xdata)
+    neg_lnpdf = -np.log(pdf)
+    return xdata, neg_lnpdf
 
 
-def main(args):
+def main(data_type, source, sample):
     """
-    Given N, mu, and spatial data
-    Generate a spatial subsample distribution using the data
+    Given data type, source, and sample 
+    Generate a spatial subsample distribution using the spatial data
     Fit Fokker-Planck to the distribution using MCMC
     """
-    n = int(args[0])
-    mu = float(args[1])
+    data_path = get_data_path(data_type, "raw")
+    df = pd.read_csv(f"{data_path}/{source}/{sample}/{sample}/2Dcoords.csv")
+    df = df[df["time"] == 100]
+    config = json.loads(open(f"{data_path}/{source}/{sample}/{sample}.json").read())
+    true_game_params = calculate_fp_params(config["A"], config["B"], config["C"], config["D"])
 
-    data_path = args[2]
-    source, sample_id = data_path.split("/")[-1].split(" ")
-    sample_id = sample_id[:-4]
-    df = pd.read_csv(data_path)
-    payoff_df = pd.read_csv("data/payoff.csv")
-    payoff_df["sample"] = payoff_df["sample"].astype(str)
-    payoff_df = payoff_df[(payoff_df["source"] == source) & (payoff_df["sample"] == sample_id)]
-    true_game_params = payoff_df[["a", "b", "c", "d"]].values[0]
+    fp = FokkerPlanck().fokker_planck_log
+    xdata, ydata = get_data_pdf_and_support(df, 10)
+    walker_ends = mcmc(fp, xdata, ydata, 100, 10000)
 
-    save_loc = "."
-    fp = FokkerPlanck(n, mu).fokker_planck_normalized
-    bin_size = 10
-    xdata = np.linspace(0.01, 0.99, bin_size)
-    ydata = create_sfp_dist(df, np.linspace(0, 1, bin_size + 1), 3)
-    walker_ends = mcmc(fp, xdata, ydata)
-
-    file_name = f"{source} {sample_id}"
-    save_loc = get_data_path("HAL", file_name)
-    plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata)
+    save_loc = get_data_path(data_type, f"images/{source} {sample}")
+    plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata, True)
+    plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata, False)
+    plot_walker_curve_mse(save_loc, fp, walker_ends, xdata, ydata)
     plot_walker_gamespace(save_loc, walker_ends, true_game_params)
-    plot_walker_params(save_loc, walker_ends)
+    plot_walker_pairplot(save_loc, walker_ends)
+    plot_walker_gameparams(save_loc, walker_ends, true_game_params)
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print("Please provide N, mu, and the data path.")
+        print("Please provide the data type, source, and sample.")
     else:
-        main(sys.argv[1:])
+        main(*sys.argv[1:])

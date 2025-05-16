@@ -78,7 +78,7 @@ def plot_walker_gamespace(save_loc, walker_ends, true_params):
     else:
         return
 
-    df = pd.DataFrame(walker_ends, columns=["awm", "amw", "sm"])
+    df = pd.DataFrame(walker_ends, columns=["N", "mu", "awm", "amw", "sm", "c"])
     df["awm/sm"] = df["awm"] / df["sm"]
     df["amw/sm"] = df["amw"] / df["sm"]
     df[["game", "a", "b", "c", "d"]] = df.apply(
@@ -96,20 +96,20 @@ def plot_walker_gamespace(save_loc, walker_ends, true_params):
     plt.close()
 
 
-def plot_walker_params(save_loc, walker_ends):
+def plot_walker_pairplot(save_loc, walker_ends):
     """
     Pairplot of the parameters the walkers ended on.
     """
     color1 = "xkcd:pink"
     color2 = "xkcd:rose"
-    df = pd.DataFrame(walker_ends, columns=["awm", "amw", "sm"])
+    df = pd.DataFrame(walker_ends, columns=["N", "mu", "awm", "amw", "sm", "c"])
     g = sns.pairplot(df, diag_kind="kde", plot_kws={"color": color1}, diag_kws={"color": color2})
     g.map_lower(sns.kdeplot, levels=4, color=color2)
-    plt.savefig(f"{save_loc}/mcmc_params.png", transparent=True)
+    plt.savefig(f"{save_loc}/mcmc_pairplot.png", transparent=True)
     plt.close()
 
 
-def plot_walker_curves(save_loc, func, walker_ends, xdata, true_ydata, logspace=True, density=True):
+def plot_walker_curves(save_loc, func, walker_ends, xdata, true_ydata, logspace=True):
     """
     Visualize curves resulting from walker end parameters.
     """
@@ -117,45 +117,52 @@ def plot_walker_curves(save_loc, func, walker_ends, xdata, true_ydata, logspace=
     for params in walker_ends:
         ydata = func(xdata, *params)
         if logspace:
-            ydata = np.exp(-ydata)
-        if density:
-            ydata = ydata / (np.sum(ydata) * xdata[0])
-        game = classify_game(*params)
+            ydata = np.exp(-ydata+params[-1])
+        game = classify_game(*params[2:5])
         ax.plot(xdata, ydata, alpha=0.5, color=game_colors[game])
     if logspace:
         true_ydata = np.exp(-true_ydata)
-    if density:
-        true_ydata = true_ydata / (np.sum(true_ydata) * xdata[0])
     ax.plot(xdata, true_ydata, color="black", ls="--")
     ax.set(xlabel="Fraction Mutant", ylabel="Probability Density")
     fig.patch.set_alpha(0)
-    fig.savefig(f"{save_loc}/mcmc_curves.png", bbox_inches="tight")
+    fig.savefig(f"{save_loc}/mcmc_curves_{logspace}.png", bbox_inches="tight")
     plt.close()
 
 
-def plot_walker_curve_mse(save_loc, func, walker_ends, xdata, true_ydata, logspace=True, density=False):
+def plot_walker_curve_mse(save_loc, func, walker_ends, xdata, true_ydata, logspace=True):
     """
     Histogram of the MSEs between each walker curve and the true curve
     """
     if logspace:
         true_ydata = np.exp(-true_ydata)
-    if density:
-        true_ydata = true_ydata / (np.sum(true_ydata) * xdata[0])
     len_data = len(true_ydata)
     mse = []
     for params in walker_ends:
         ydata = func(xdata, *params)
         if logspace:
-            ydata = np.exp(-ydata)
-        if density:
-            ydata = ydata / (np.sum(ydata) * xdata[0])
+            ydata = np.exp(-ydata+params[-1])
         mse.append(np.sum((ydata-true_ydata)**2) / len_data)
 
     fig, ax = plt.subplots()
-    ax.hist(mse, bins=[x/500 for x in range(0, 21)], density=False, color="gray")
+    ax.hist(mse, bins=10, density=False, color="gray")
     ax.set(xlabel="MSE", ylabel="Count", ylim=(0, len(walker_ends)))
     fig.patch.set_alpha(0)
     fig.savefig(f"{save_loc}/mcmc_curves_mse.png", bbox_inches="tight")
+    plt.close()
+
+
+def plot_walker_gameparams(save_loc, walker_ends, true_game_params):
+    """
+    Histograms of the game parameters the walkers ended on.
+    """
+    df = pd.DataFrame(walker_ends, columns=["N", "mu", "awm", "amw", "sm", "c"])
+    fig, ax = plt.subplots(1, 3, figsize=(12, 4), layout="constrained")
+    for i,payoff_param in enumerate(["awm", "amw", "sm"]):
+        ax[i].hist(df[payoff_param], bins=10, color="gray")
+        ax[i].axvline(true_game_params[i], color="black", linestyle="dashed")
+        ax[i].set(title=payoff_param, ylim=(0, len(walker_ends)))
+    fig.patch.set_alpha(0)
+    fig.savefig(f"{save_loc}/mcmc_gameparams.png")
     plt.close()
 
 
@@ -163,11 +170,22 @@ def lnprob(params, func, x, y, yerr):
     """
     Return chi-squared log likelihood, if the priors are satisfied.
     """
-    params = np.array(params)
-    if np.any(params > 1) or np.any(params < -1):
+    # N
+    if params[0] < 1 or params[0] > 1000:
         return -np.inf
-    if params[2] < 0:
+    # mu
+    if params[1] < 0 or params[1] > 0.1:
         return -np.inf
+    # awm
+    if params[2] < -1 or params[2] > 1:
+        return -np.inf
+    # amw
+    if params[3] < -1 or params[3] > 1:
+        return -np.inf
+    # sm
+    if params[4] < 0 or params[4] > 1:
+        return -np.inf
+    # c: no restriction
     return -0.5 * np.sum(((y - func(x, *params)) / yerr)**2)
 
 
@@ -176,8 +194,8 @@ def mcmc(func, xdata, ydata, nwalkers=50, niter=500):
     Run MCMC on true xdata, ydata and return walker end locations.
     """
     yerr = 0.05 * ydata
-    initial = (0, 0, 0.5)
-    ndim = 3
+    initial = (100, 0.5, 0, 0, 0.5, 0)
+    ndim = len(initial)
     p0 = [np.array(initial) + 0.1 * np.random.randn(ndim) for _ in range(nwalkers)]
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(func, xdata, ydata, yerr))

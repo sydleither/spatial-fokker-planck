@@ -26,7 +26,7 @@ def main(data_dir, experiment_name, num_samples, run_command):
     """
     data_dir = get_data_path(data_dir, "raw")
     space = "2D"
-    end_time = 500
+    end_time = 100
     grid_size = 200
 
     samples = latin_hybercube_sample(
@@ -56,7 +56,7 @@ def main(data_dir, experiment_name, num_samples, run_command):
             y=grid_size,
             interaction_radius=10,
             reproduction_radius=10,
-            write_freq=100,
+            write_freq=end_time,
             ticks=end_time,
         )
         run_output.append(f"{run_str} {config_name} {space} {seed}\n")

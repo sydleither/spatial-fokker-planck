@@ -37,16 +37,14 @@ def main(params):
     Visualize FP based on input parameters.
     """
     params = [float(x) for x in params]
-    n = int(params[0])
-    mu = params[1]
 
-    fp = FokkerPlanck(n, mu).fokker_planck_log
-    x = np.linspace(0.01, 0.99, n)
-    y = fp(x, *params[2:])
+    fp = FokkerPlanck().fokker_planck
+    x = np.linspace(0.01, 0.99, 100)
+    y = fp(x, *params)
 
     params_str = "_".join([f"{param_names[i]}={params[i]}" for i in range(len(params))])
     save_loc = get_data_path("self", params_str)
-    visualize_curve(save_loc, params, x, y, True)
+    visualize_curve(save_loc, params, x, y, False, False)
 
 
 if __name__ == "__main__":
