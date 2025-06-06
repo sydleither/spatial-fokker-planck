@@ -38,10 +38,11 @@ def plot_paramsweep(save_loc, df, metric):
         ax[i].imshow(df_sm, cmap=cmap, norm=norm)
         ax[i].set_xticks(range(0, len(amws), 5), labels=amws[0::5])
         ax[i].set_yticks(range(0, len(awms), 5), labels=awms[0::5])
+        ax[i].set_xlabel("amw")
+        ax[i].set_ylabel("awm")
+        ax[i].set_title(f"sm={sm}")
     cbar = fig.colorbar(scalarmap, drawedges=False, ax=ax[-1])
     cbar.set_label(metric)
-    fig.supxlabel("amw")
-    fig.supylabel("awm")
     fig.patch.set_alpha(0.0)
     fig.savefig(f"{save_loc}/{metric}.png", bbox_inches="tight")
     plt.close()
@@ -117,7 +118,7 @@ def plot_walker_curves(save_loc, func, walker_ends, xdata, true_ydata, logspace=
     for params in walker_ends:
         ydata = func(xdata, *params)
         if logspace:
-            ydata = np.exp(-ydata+params[-1])
+            ydata = np.exp(-ydata + params[-1])
         game = classify_game(*params[2:5])
         ax.plot(xdata, ydata, alpha=0.5, color=game_colors[game])
     if logspace:
@@ -140,8 +141,8 @@ def plot_walker_curve_mse(save_loc, func, walker_ends, xdata, true_ydata, logspa
     for params in walker_ends:
         ydata = func(xdata, *params)
         if logspace:
-            ydata = np.exp(-ydata+params[-1])
-        mse.append(np.sum((ydata-true_ydata)**2) / len_data)
+            ydata = np.exp(-ydata + params[-1])
+        mse.append(np.sum((ydata - true_ydata) ** 2) / len_data)
 
     fig, ax = plt.subplots()
     ax.hist(mse, bins=10, density=False, color="gray")
@@ -157,7 +158,7 @@ def plot_walker_gameparams(save_loc, walker_ends, true_game_params):
     """
     df = pd.DataFrame(walker_ends, columns=["N", "mu", "awm", "amw", "sm", "c"])
     fig, ax = plt.subplots(1, 3, figsize=(12, 4), layout="constrained")
-    for i,payoff_param in enumerate(["awm", "amw", "sm"]):
+    for i, payoff_param in enumerate(["awm", "amw", "sm"]):
         ax[i].hist(df[payoff_param], bins=10, color="gray")
         ax[i].axvline(true_game_params[i], color="black", linestyle="dashed")
         ax[i].set(title=payoff_param, ylim=(0, len(walker_ends)))
@@ -186,7 +187,7 @@ def lnprob(params, func, x, y, yerr):
     if params[4] < 0 or params[4] > 1:
         return -np.inf
     # c: no restriction
-    return -0.5 * np.sum(((y - func(x, *params)) / yerr)**2)
+    return -0.5 * np.sum(((y - func(x, *params)) / yerr) ** 2)
 
 
 def mcmc(func, xdata, ydata, nwalkers=50, niter=500):
