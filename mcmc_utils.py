@@ -168,7 +168,7 @@ def plot_walker_gameparams(save_loc, walker_ends, true_game_params):
     plt.close()
 
 
-def lnprob(params, func, x, y, yerr):
+def lnprob(params, func, x, y):
     """
     Return chi-squared log likelihood, if the priors are satisfied.
     """
@@ -187,20 +187,21 @@ def lnprob(params, func, x, y, yerr):
     # sm
     if params[4] < 0 or params[4] > 1:
         return -np.inf
-    # c: no restriction
-    return -0.5 * np.sum(((y - func(x, *params)) / yerr) ** 2)
+    # c
+    if params[5] < 0:
+        return -np.inf
+    return -0.5 * np.sum(((y - func(x, *params))) ** 2)
 
 
 def mcmc(func, xdata, ydata, nwalkers=100, niter=1000):
     """
     Run MCMC on true xdata, ydata and return walker end locations.
     """
-    yerr = 0.05 * ydata
-    initial = (100, 0.05, 0, 0, 0.5, 0)
+    initial = (100, 0.05, 0, 0, 0.5, 1)
     ndim = len(initial)
     p0 = [np.array(initial) + 0.1 * np.random.randn(ndim) for _ in range(nwalkers)]
 
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(func, xdata, ydata, yerr))
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(func, xdata, ydata))
     sampler.run_mcmc(p0, niter)
     walker_ends = sampler.get_chain(discard=niter - 1)[0, :, :]
 
