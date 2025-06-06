@@ -12,6 +12,7 @@ import pandas as pd
 import seaborn as sns
 
 from common import calculate_fp_params, classify_game, game_colors
+from fokker_planck import param_names
 
 
 def plot_paramsweep(save_loc, df, metric):
@@ -156,9 +157,9 @@ def plot_walker_gameparams(save_loc, walker_ends, true_game_params):
     """
     Histograms of the game parameters the walkers ended on.
     """
-    df = pd.DataFrame(walker_ends, columns=["N", "mu", "awm", "amw", "sm", "c"])
-    fig, ax = plt.subplots(1, 3, figsize=(12, 4), layout="constrained")
-    for i, payoff_param in enumerate(["awm", "amw", "sm"]):
+    df = pd.DataFrame(walker_ends, columns=param_names)
+    fig, ax = plt.subplots(1, len(param_names), figsize=(4*len(param_names), 4), layout="constrained")
+    for i, payoff_param in enumerate(param_names):
         ax[i].hist(df[payoff_param], bins=10, color="gray")
         ax[i].axvline(true_game_params[i], color="black", linestyle="dashed")
         ax[i].set(title=payoff_param, ylim=(0, len(walker_ends)))
@@ -190,17 +191,31 @@ def lnprob(params, func, x, y, yerr):
     return -0.5 * np.sum(((y - func(x, *params)) / yerr) ** 2)
 
 
-def mcmc(func, xdata, ydata, nwalkers=50, niter=500):
+def mcmc(func, xdata, ydata, nwalkers=100, niter=1000):
     """
     Run MCMC on true xdata, ydata and return walker end locations.
     """
     yerr = 0.05 * ydata
-    initial = (100, 0.5, 0, 0, 0.5, 0)
+    initial = (100, 0.05, 0, 0, 0.5, 0)
     ndim = len(initial)
     p0 = [np.array(initial) + 0.1 * np.random.randn(ndim) for _ in range(nwalkers)]
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(func, xdata, ydata, yerr))
     sampler.run_mcmc(p0, niter)
     walker_ends = sampler.get_chain(discard=niter - 1)[0, :, :]
+
+    # fig, axes = plt.subplots(ndim, figsize=(10, 7), sharex=True)
+    # for i in range(ndim):
+    #     axes[i].plot(sampler.get_chain()[:, :, i], alpha=0.5)
+    #     axes[i].set_ylabel(param_names[i])
+    # axes[-1].set_xlabel("Step number")
+    # plt.tight_layout()
+    # fig.savefig("trace.png")
+    # plt.close()
+
+    # samples = sampler.get_chain(flat=True)
+    # for i, name in enumerate(param_names):
+    #     mcmc = np.percentile(samples[:, i], [16, 50, 84])
+    #     print(f"{name} = {mcmc[1]:.4f} (+{mcmc[2]-mcmc[1]:.4f}, -{mcmc[1]-mcmc[0]:.4f})")
 
     return walker_ends

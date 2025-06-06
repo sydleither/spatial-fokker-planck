@@ -24,13 +24,9 @@ def main(params):
     Generate a distribution using Fokker-Planck equation with those params
     Give the distribution and Fokker-Planck equation to MCMC
     """
-    params = [float(x) for x in params]
-    n = int(params[0])
-    mu = params[1]
-    true_params = params[2:]
-
-    fp = FokkerPlanck(n, mu).fokker_planck_log
-    xdata = np.linspace(0.01, 0.99, n)
+    true_params = [float(x) for x in params] + [1]
+    fp = FokkerPlanck().fokker_planck_log
+    xdata = np.linspace(0.01, 0.99, 100)
     ydata = fp(xdata, *true_params)
     walker_ends = mcmc(fp, xdata, ydata)
 

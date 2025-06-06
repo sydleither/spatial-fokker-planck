@@ -12,7 +12,7 @@ class FokkerPlanck:
     """
     FokkerPlanck class to handle equation
     """
-    def fokker_planck(self, x, n, mu, awm, amw, sm):
+    def fokker_planck(self, x, n, mu, awm, amw, sm, c):
         """
         The Fokker-Planck equation as defined in Barker-Clarke et al., 2024
         x = 0 or x = 1 will break the equation due to the log
@@ -23,7 +23,7 @@ class FokkerPlanck:
             fx = ((((1+sm)*awm + (1+awm)*amw)/awm**2) * np.log(1+awm*x)) - ((awm+amw)/awm)*x
         phi = (1 - 2*n*mu) * np.log(x*(1-x)) - 2*n*fx
         rho = 2*n*np.exp(-phi)
-        return rho
+        return c*rho
 
     def fokker_planck_verbose(self, x, n, mu, awm, amw, sm):
         """
@@ -60,5 +60,5 @@ class FokkerPlanck:
         else:
             fx = ((((1+sm)*awm + (1+awm)*amw)/awm**2) * np.log(1+awm*x)) - ((awm+amw)/awm)*x
         phi = (1 - 2*n*mu) * np.log(x*(1-x)) - 2*n*fx - np.log(2*n)
-        neg_lnrho = c + phi
+        neg_lnrho = -np.log(c) + phi
         return neg_lnrho

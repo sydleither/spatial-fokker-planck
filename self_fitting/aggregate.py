@@ -58,14 +58,14 @@ def main(params):
     xdata = np.linspace(0.01, 0.99, 100)
     len_data = len(xdata)
 
-    a_vals = np.round(np.arange(-0.5, 0.51, 0.05), 2)
-    sm_vals = [0.025, 0.05, 0.075]
+    a_vals = np.round(np.arange(-0.55, 0.551, 0.1), 2)
+    sm_vals = np.round(np.arange(0.05, 0.5, 0.1), 2)
     data = []
     for awm in a_vals:
         for amw in a_vals:
             for sm in sm_vals:
-                true_ydata = fp(xdata, n, mu, awm, amw, sm, 0)
-                true_params = np.array([n, mu, awm, amw, sm, 0])
+                true_ydata = fp(xdata, n, mu, awm, amw, sm, 1)
+                true_params = np.array([n, mu, awm, amw, sm, 1])
                 walker_ends = np.array(mcmc(fp, xdata, true_ydata))
                 #param_pct_errors = np.abs(walker_ends - true_params) / ((np.abs(true_params)+np.abs(walker_ends))/2)
                 idv_param_distances = parameter_distances(true_params, walker_ends)
