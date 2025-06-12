@@ -1,6 +1,14 @@
 # spatial-fokker-planck
 Measuring games in spatial data by fitting the Fokker-Planck equation.
 
+## Fit to self
+```
+python3 -m self_fitting.aggregate 100 0.001
+python3 -m self_fitting.aggregate 100 0.01
+python3 -m self_fitting.aggregate 500 0.001
+python3 -m self_fitting.aggregate 500 0.01
+```
+
 ## Fit to ABM
 
 ### Generate data

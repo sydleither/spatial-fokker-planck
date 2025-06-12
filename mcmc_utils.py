@@ -199,7 +199,15 @@ def mcmc(func, xdata, ydata, nwalkers=100, niter=1000):
     """
     initial = (100, 0.05, 0, 0, 0.5, 1)
     ndim = len(initial)
-    p0 = [np.array(initial) + 0.1 * np.random.randn(ndim) for _ in range(nwalkers)]
+    p0 = []
+    for _ in range(nwalkers):
+        walker = []
+        for val in initial:
+            sd = val/10
+            if sd == 0:
+                sd = 0.1
+            walker.append(np.random.normal(loc=val, scale=sd))
+        p0.append(walker)
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(func, xdata, ydata))
     sampler.run_mcmc(p0, niter)

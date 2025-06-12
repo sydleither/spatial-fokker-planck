@@ -4,8 +4,6 @@ Functions or variables used across multiple files.
 
 import os
 
-import numpy as np
-
 
 game_colors = {
     "sensitive_wins": "#4C956C",
@@ -66,37 +64,3 @@ def classify_game(awm, amw, sm, return_params=False):
     if return_params:
         return game, a, b, c, d
     return game
-
-
-def get_regime_awms(mu, amw, sm, sigma):
-    if sigma <= 0:
-        print("sigma <= 0 invalid for getting regime awms")
-        return
-    regimes = {}
-    regimes["maintenance"] = (mu*amw)/(sm*(1+sm))
-    regimes["masking"] = amw + 2*sm
-    regimes["mirroring"] = -((2*sm)/(1-sm)) + mu*((2*sm+amw)/(sm*(1-sm)))
-    regimes["mimicry"] = -(sigma/(1+sigma)) + ((mu*(amw-sigma))/(sigma*(1+sigma)))
-    return regimes
-
-
-def get_regime_amws(mu, awm, sm, sigma):
-    if sigma >= 0:
-        print("sigma >= 0 invalid for getting regime amws")
-        return
-    regimes = {}
-    regimes["maintenance"] = -((mu*awm*(1+sm))/sm)
-    regimes["masking"] = awm - 2*sm
-    regimes["mirroring"] = -2*sm - mu*((2*sm-awm*(1-sm))/sm)
-    regimes["mimicry"] = sigma - (mu*(sigma+(1+sigma)*awm))/sigma
-    return regimes
-
-
-def calculate_sigma(mu, awm, amw, sm):
-    sigma_bot = 2*sm + awm*(sm+np.sqrt(4*mu**2+sm**2)-np.sign(sm)*2*mu)
-    if sigma_bot == 0:
-        print("Denominator of sigma equation equals zero")
-        print(f"\tmu={mu}, awm={awm}, amw={amw}, sm={sm}")
-        return -np.inf
-    sigma_top = 2*sm**2 + sm*(amw-awm) + (np.sign(sm)*2*mu-np.sqrt(4*mu**2+sm**2))*(amw+awm)
-    return sigma_top / sigma_bot
