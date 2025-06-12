@@ -1,6 +1,6 @@
 import numpy as np
 
-from common import classify_game
+from common import classify_game, game_colors
 from fokker_planck import param_names
 
 
@@ -75,7 +75,7 @@ def quadrant_classification(true_params, walker_ends):
         walker_game = classify_game(*walker_end[2:5])
         game_matches.append(1 if walker_game == true_game else 0)
     game_matches = sum(game_matches) / len(game_matches)
-    return {"correct_game_classifications": game_matches}
+    return {"correct_game_classifications": game_matches, "game": game_colors[true_game]}
 
 
 def evaluate_performance(fp, xdata, true_ydata, walker_ends, n, mu, awm, amw, sm, c):

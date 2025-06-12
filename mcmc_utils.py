@@ -49,6 +49,23 @@ def plot_paramsweep(save_loc, df, metric):
     plt.close()
 
 
+def plot_paramsweep_game(save_loc, df):
+    """
+    Plot game quadrant across awm, amw, and sm.
+    """
+    sms = df["sm"].unique()
+    fig, ax = plt.subplots(1, len(sms), figsize=(5 * len(sms), 5), constrained_layout=True)
+    for i,sm in enumerate(sms):
+        df_sm = df[df["sm"] == sm]
+        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["game"], s=200)
+        ax[i].set_xlabel("amw")
+        ax[i].set_ylabel("awm")
+        ax[i].set_title(f"sm={sm}")
+    fig.patch.set_alpha(0.0)
+    fig.savefig(f"{save_loc}/game_quadrant.png", bbox_inches="tight")
+    plt.close()
+
+
 def gamespace_plot(ax, df, x, y, truex, truey):
     """
     Make a gamespace plot at the given axis.
