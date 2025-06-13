@@ -23,14 +23,13 @@ def main(params):
 
     fp = FokkerPlanck().fokker_planck_log
     xdata = np.linspace(0.01, 0.99, 100)
+    scale = 0.5
 
-    awm_vals = np.round(np.arange(-0.5, 1.25, 0.25), 2)
-    amw_vals = np.round(np.arange(-1, 0.75, 0.25), 2)
-    sm_vals = np.round(np.arange(0.05, 0.55, 0.1), 2)
     data = []
-    for awm in awm_vals:
-        for amw in amw_vals:
-            for sm in sm_vals:
+    sm_vals = np.round(np.arange(0.05, 0.55, 0.1), 2)
+    for sm in sm_vals:
+        for awm in np.round(np.arange(-2*sm, 4*sm+0.1*sm*scale, sm*scale), 3):
+            for amw in np.round(np.arange(-4*sm, 2*sm+0.1*sm*scale, sm*scale), 3):
                 true_ydata = fp(xdata, n, mu, awm, amw, sm, c)
                 walker_ends = np.array(mcmc(fp, xdata, true_ydata))
                 d = evaluate_performance(fp, xdata, true_ydata, walker_ends, n, mu, awm, amw, sm, c)

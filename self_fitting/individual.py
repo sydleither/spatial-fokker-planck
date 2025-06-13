@@ -35,7 +35,7 @@ def main(params):
     plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata, True)
     plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata, False)
     plot_walker_curve_mse(save_loc, fp, walker_ends, xdata, ydata)
-    plot_walker_gamespace(save_loc, walker_ends, true_params)
+    plot_walker_gamespace(save_loc, walker_ends, true_params[2:5])
     plot_walker_pairplot(save_loc, walker_ends)
     plot_walker_gameparams(save_loc, walker_ends, true_params)
 

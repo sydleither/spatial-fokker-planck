@@ -33,7 +33,7 @@ def plot_paramsweep(save_loc, df, metric):
 
     awms = df["awm"].unique()
     amws = df["amw"].unique()
-    for i,sm in enumerate(sms):
+    for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
         df_sm = df_sm.pivot(index="amw", columns="awm", values=metric)
         ax[i].imshow(df_sm, cmap=cmap, norm=norm)
@@ -55,7 +55,7 @@ def plot_paramsweep_game(save_loc, df):
     """
     sms = df["sm"].unique()
     fig, ax = plt.subplots(1, len(sms), figsize=(5 * len(sms), 5), constrained_layout=True)
-    for i,sm in enumerate(sms):
+    for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
         ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["game"], s=200)
         ax[i].set_xlabel("amw")
@@ -66,7 +66,7 @@ def plot_paramsweep_game(save_loc, df):
     plt.close()
 
 
-def gamespace_plot(ax, df, x, y, truex, truey):
+def gamespace_plot(ax, df, x, y):
     """
     Make a gamespace plot at the given axis.
     """
@@ -81,7 +81,8 @@ def gamespace_plot(ax, df, x, y, truex, truey):
         palette=game_colors.values(),
     )
     sns.kdeplot(data=df, x=x, y=y, color="gray", alpha=0.3, ax=ax)
-    ax.scatter([truex], [truey], marker="*", color="black")
+    ax.set_xlabel(r"$s_m + \alpha_{mw}$")
+    ax.set_ylabel(r"$\alpha_{wm} - s_m$")
 
 
 def plot_walker_gamespace(save_loc, walker_ends, true_params):
@@ -89,26 +90,22 @@ def plot_walker_gamespace(save_loc, walker_ends, true_params):
     Plots of the final walker params on the Fokker-Planck transformed and normal game spaces.
     """
     if len(true_params) == 3:
-        awm, amw, sm = true_params
         _, a, b, c, d = classify_game(*true_params, return_params=True)
     elif len(true_params) == 4:
         a, b, c, d = true_params
-        awm, amw, sm = calculate_fp_params(a, b, c, d)
     else:
         return
 
     df = pd.DataFrame(walker_ends, columns=["N", "mu", "awm", "amw", "sm", "c"])
-    df["awm/sm"] = df["awm"] / df["sm"]
-    df["amw/sm"] = df["amw"] / df["sm"]
     df[["game", "a", "b", "c", "d"]] = df.apply(
         lambda x: classify_game(x["awm"], x["amw"], x["sm"], True), axis=1, result_type="expand"
     )
     df["c-a"] = df["c"] - df["a"]
     df["b-d"] = df["b"] - df["d"]
 
-    fig, ax = plt.subplots(1, 2, figsize=(8, 4))
-    gamespace_plot(ax[0], df, "amw/sm", "awm/sm", amw / sm, awm / sm)
-    gamespace_plot(ax[1], df, "c-a", "b-d", c - a, b - d)
+    fig, ax = plt.subplots(figsize=(4, 4))
+    gamespace_plot(ax, df, "c-a", "b-d")
+    ax.scatter([c - a], [b - d], marker="*", color="black")
     fig.tight_layout()
     fig.patch.set_alpha(0)
     fig.savefig(f"{save_loc}/mcmc_gamespace.png", bbox_inches="tight")
@@ -175,7 +172,9 @@ def plot_walker_gameparams(save_loc, walker_ends, true_game_params):
     Histograms of the game parameters the walkers ended on.
     """
     df = pd.DataFrame(walker_ends, columns=param_names)
-    fig, ax = plt.subplots(1, len(param_names), figsize=(4*len(param_names), 4), layout="constrained")
+    fig, ax = plt.subplots(
+        1, len(param_names), figsize=(4 * len(param_names), 4), layout="constrained"
+    )
     for i, payoff_param in enumerate(param_names):
         ax[i].hist(df[payoff_param], bins=10, color="gray")
         ax[i].axvline(true_game_params[i], color="black", linestyle="dashed")
@@ -207,7 +206,7 @@ def lnprob(params, func, x, y):
     # c
     if params[5] < 0:
         return -np.inf
-    return -0.5 * np.sum(((y - func(x, *params))) ** 2)
+    return -0.5 * np.sum((y - func(x, *params)) ** 2)
 
 
 def mcmc(func, xdata, ydata, nwalkers=100, niter=1000):
@@ -220,7 +219,7 @@ def mcmc(func, xdata, ydata, nwalkers=100, niter=1000):
     for _ in range(nwalkers):
         walker = []
         for val in initial:
-            sd = val/10
+            sd = val / 10
             if sd == 0:
                 sd = 0.1
             walker.append(np.random.normal(loc=val, scale=sd))
@@ -238,10 +237,5 @@ def mcmc(func, xdata, ydata, nwalkers=100, niter=1000):
     # plt.tight_layout()
     # fig.savefig("trace.png")
     # plt.close()
-
-    # samples = sampler.get_chain(flat=True)
-    # for i, name in enumerate(param_names):
-    #     mcmc = np.percentile(samples[:, i], [16, 50, 84])
-    #     print(f"{name} = {mcmc[1]:.4f} (+{mcmc[2]-mcmc[1]:.4f}, -{mcmc[1]-mcmc[0]:.4f})")
 
     return walker_ends

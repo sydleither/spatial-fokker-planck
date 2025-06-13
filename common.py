@@ -4,6 +4,8 @@ Functions or variables used across multiple files.
 
 import os
 
+import numpy as np
+
 
 game_colors = {
     "sensitive_wins": "#4C956C",
@@ -50,7 +52,9 @@ def classify_game(awm, amw, sm, return_params=False):
     c = 1 + sm + amw
     d = 1 + sm
 
-    if a > c and b > d:
+    if np.isclose(a, c) or np.isclose(b, d):
+        game = "unknown"
+    elif a > c and b > d:
         game = "sensitive_wins"
     elif c > a and b > d:
         game = "coexistence"
@@ -58,8 +62,6 @@ def classify_game(awm, amw, sm, return_params=False):
         game = "bistability"
     elif c > a and d > b:
         game = "resistant_wins"
-    else:
-        game = "unknown"
 
     if return_params:
         return game, a, b, c, d
