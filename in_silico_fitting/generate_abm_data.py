@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 from common import classify_game, get_data_path
-from EGT_HAL.config_utils import latin_hybercube_sample, write_config, write_run_scripts
+from EGT_HAL.config_utils import write_config, write_run_scripts
 from mcmc_utils import gamespace_plot
 
 
@@ -69,7 +69,7 @@ def main(data_dir, interaction_radius, reproduction_radius, run_command):
         game, a, b, c, d = classify_game(sample["awm"], sample["amw"], sample["sm"], return_params=True)
         if game == "unknown":
             continue
-        payoff = [a, b, c, d]
+        payoff = [float(a), float(b), float(c), float(d)]
         write_config(
             data_dir,
             experiment_name,

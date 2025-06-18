@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from common import calculate_fp_params, classify_game, game_colors
+from common import classify_game, game_colors
 from fokker_planck import param_names
 
 
@@ -31,10 +31,10 @@ def plot_paramsweep(save_loc, df, metric):
         cmap = plt.get_cmap("Purples")
     scalarmap = cm.ScalarMappable(norm=norm, cmap=cmap)
 
-    awms = df["awm"].unique()
-    amws = df["amw"].unique()
     for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
+        awms = df_sm["awm"].unique()
+        amws = df_sm["amw"].unique()
         df_sm = df_sm.pivot(index="amw", columns="awm", values=metric)
         ax[i].imshow(df_sm, cmap=cmap, norm=norm)
         ax[i].set_xticks(range(0, len(amws), 5), labels=amws[0::5])

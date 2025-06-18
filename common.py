@@ -3,8 +3,10 @@ Functions or variables used across multiple files.
 """
 
 import os
+from random import choices
 
 import numpy as np
+from scipy import stats
 
 
 game_colors = {
@@ -66,3 +68,30 @@ def classify_game(awm, amw, sm, return_params=False):
     if return_params:
         return game, a, b, c, d
     return game
+
+
+def spatial_subsample(s_coords, r_coords, sample_length, num_samples=5000):
+    """
+    Create spatial subsample support and distribution.
+    """
+    dims = range(len(s_coords[0]))
+    max_dims = [max(np.max(s_coords[:, i]), np.max(r_coords[:, i])) for i in dims]
+    dim_vals = [choices(range(0, max_dims[i] - sample_length), k=num_samples) for i in dims]
+    fr_counts = []
+    for s in range(num_samples):
+        ld = [dim_vals[i][s] for i in dims]
+        ud = [ld[i] + sample_length for i in dims]
+        subset_s = [(s_coords[:, i] >= ld[i]) & (s_coords[:, i] <= ud[i]) for i in dims]
+        subset_s = np.sum(np.all(subset_s, axis=0))
+        subset_r = [(r_coords[:, i] >= ld[i]) & (r_coords[:, i] <= ud[i]) for i in dims]
+        subset_r = np.sum(np.all(subset_r, axis=0))
+        subset_total = subset_s + subset_r
+        if subset_total == 0:
+            continue
+        fr_counts.append(subset_r / subset_total)
+
+    xdata = np.linspace(min(fr_counts), max(fr_counts), 100)
+    kde = stats.gaussian_kde(fr_counts)
+    pdf = kde(xdata)
+    neg_lnpdf = -np.log(pdf)
+    return xdata, neg_lnpdf
