@@ -8,14 +8,14 @@ import numpy as np
 
 from common import get_data_path
 from fokker_planck import FokkerPlanck, param_names
-from mcmc_utils import (
-    mcmc,
+from individual_fitting_plots import (
     plot_walker_curves,
     plot_walker_curve_mse,
     plot_walker_gamespace,
     plot_walker_pairplot,
     plot_walker_gameparams,
 )
+from mcmc import mcmc
 
 
 def main(params):

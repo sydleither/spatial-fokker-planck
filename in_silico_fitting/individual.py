@@ -9,14 +9,14 @@ import pandas as pd
 
 from common import get_data_path, spatial_subsample
 from fokker_planck import FokkerPlanck
-from mcmc_utils import (
-    mcmc,
+from individual_fitting_plots import (
     plot_walker_curves,
     plot_walker_curve_mse,
     plot_walker_gamespace,
     plot_walker_pairplot,
     plot_walker_gameparams,
 )
+from mcmc import mcmc
 
 
 def main(data_type, source, sample):

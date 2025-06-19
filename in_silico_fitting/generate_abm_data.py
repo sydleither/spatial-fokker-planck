@@ -22,7 +22,7 @@ import pandas as pd
 
 from common import classify_game, get_data_path
 from EGT_HAL.config_utils import write_config, write_run_scripts
-from mcmc_utils import gamespace_plot
+from individual_fitting_plots import gamespace_plot
 
 
 def game_spread(data_dir, experiment_name, samples):

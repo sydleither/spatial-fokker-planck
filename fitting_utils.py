@@ -63,8 +63,8 @@ def parameter_distances(true_ends, walker_ends):
     for p, param_name in enumerate(param_names):
         walkers_param = walker_ends[:, p]
         walkers_param_distance = np.abs(walkers_param - true_ends[p])
-        differences[f"mean_{param_name}_diff"] = np.mean(walkers_param_distance)
-        differences[f"var_{param_name}_diff"] = np.var(walkers_param_distance)
+        differences[f"Mean {param_name} Difference"] = np.mean(walkers_param_distance)
+        differences[f"Variance in {param_name} Difference"] = np.var(walkers_param_distance)
     return differences
 
 
@@ -75,7 +75,7 @@ def quadrant_classification(true_params, walker_ends):
         walker_game = classify_game(*walker_end[2:5])
         game_matches.append(1 if walker_game == true_game else 0)
     game_matches = sum(game_matches) / len(game_matches)
-    return {"correct_game_classifications": game_matches, "game": game_colors[true_game]}
+    return {"Correct Game Classifications": game_matches, "Game": game_colors[true_game]}
 
 
 def evaluate_performance(fp, xdata, true_ydata, walker_ends, n, mu, awm, amw, sm, c):
@@ -95,8 +95,8 @@ def evaluate_performance(fp, xdata, true_ydata, walker_ends, n, mu, awm, amw, sm
         "amw": amw,
         "sm": sm,
         "c": c,
-        "mean_curve_mse": np.mean(mse),
-        "var_curve_mse": np.var(mse),
-        "mean_probability_density": np.mean(true_ydata),
+        "Mean Curve MSE": np.mean(mse),
+        "Variance in Curve MSE": np.var(mse),
+        "Mean Probability Density": np.mean(true_ydata),
     }
     return data | regimes | idv_param_distances | game_classifications

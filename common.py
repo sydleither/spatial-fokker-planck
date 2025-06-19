@@ -10,11 +10,11 @@ from scipy import stats
 
 
 game_colors = {
-    "sensitive_wins": "#4C956C",
-    "coexistence": "#9C6D57",
-    "bistability": "#047495",
-    "resistant_wins": "#EF7C8E",
-    "unknown": "#929591",
+    "Sensitive Wins": "#4C956C",
+    "Coexistence": "#9C6D57",
+    "Bistability": "#047495",
+    "Resistant Wins": "#EF7C8E",
+    "Unknown": "#929591",
 }
 
 
@@ -55,15 +55,15 @@ def classify_game(awm, amw, sm, return_params=False):
     d = 1 + sm
 
     if np.isclose(a, c) or np.isclose(b, d):
-        game = "unknown"
+        game = "Unknown"
     elif a > c and b > d:
-        game = "sensitive_wins"
+        game = "Sensitive Wins"
     elif c > a and b > d:
-        game = "coexistence"
+        game = "Coexistence"
     elif a > c and d > b:
-        game = "bistability"
+        game = "Bistability"
     elif c > a and d > b:
-        game = "resistant_wins"
+        game = "Resistant Wins"
 
     if return_params:
         return game, a, b, c, d

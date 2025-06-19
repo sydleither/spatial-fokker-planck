@@ -7,10 +7,11 @@ import sys
 import numpy as np
 import pandas as pd
 
+from aggregate_fitting_plots import plot_all
 from common import get_data_path
 from fitting_utils import evaluate_performance
 from fokker_planck import FokkerPlanck, param_names
-from mcmc_utils import mcmc, plot_paramsweep, plot_paramsweep_game
+from mcmc import mcmc
 
 
 def main(params):
@@ -37,20 +38,8 @@ def main(params):
 
     params_str = "_".join([f"{param_names[i]}={params[i]}" for i in range(len(params))])
     save_loc = get_data_path("self", params_str)
-    metrics = [x for x in data[0].keys() if x not in param_names]
     df = pd.DataFrame(data)
-    for metric in metrics:
-        if metric == "game":
-            plot_paramsweep_game(save_loc, df)
-        else:
-            plot_paramsweep(save_loc, df, metric)
-
-    with open(f"{save_loc}/mean_param_diff_ci.txt", "w") as f:
-        for param in param_names:
-            param_col = df[f"mean_{param}_diff"]
-            mean_diff = param_col.mean()
-            sem_diff = param_col.sem()
-            f.write(f"{param}: {mean_diff} ({mean_diff-sem_diff}, {mean_diff+sem_diff})\n")
+    plot_all(save_loc, df)
 
 
 if __name__ == "__main__":
