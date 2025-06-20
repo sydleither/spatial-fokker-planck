@@ -80,24 +80,22 @@ def plot_walker_curves(save_loc, func, walker_ends, xdata, true_ydata, logspace=
     if logspace:
         true_ydata = np.exp(-true_ydata)
     ax.plot(xdata, true_ydata, color="black", ls="--")
+    if logspace:
+        ax.set(ylim=(0, 2*true_ydata.max()))
     ax.set(xlabel="Fraction Mutant", ylabel="Probability Density")
     fig.patch.set_alpha(0)
     fig.savefig(f"{save_loc}/mcmc_curves_{logspace}.png", bbox_inches="tight")
     plt.close()
 
 
-def plot_walker_curve_mse(save_loc, func, walker_ends, xdata, true_ydata, logspace=True):
+def plot_walker_curve_mse(save_loc, func, walker_ends, xdata, true_ydata):
     """
     Histogram of the MSEs between each walker curve and the true curve
     """
-    if logspace:
-        true_ydata = np.exp(-true_ydata)
     len_data = len(true_ydata)
     mse = []
     for params in walker_ends:
         ydata = func(xdata, *params)
-        if logspace:
-            ydata = np.exp(-ydata + params[-1])
         mse.append(np.sum((ydata - true_ydata) ** 2) / len_data)
 
     fig, ax = plt.subplots()
@@ -123,6 +121,15 @@ def plot_walker_gameparams(save_loc, walker_ends, true_game_params):
     fig.patch.set_alpha(0)
     fig.savefig(f"{save_loc}/mcmc_gameparams.png", bbox_inches="tight")
     plt.close()
+
+
+def plot_all(save_loc, fp, walker_ends, xdata, ydata, params):
+    plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata, True)
+    plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata, False)
+    plot_walker_curve_mse(save_loc, fp, walker_ends, xdata, ydata)
+    plot_walker_gamespace(save_loc, walker_ends, params[2:5])
+    plot_walker_pairplot(save_loc, walker_ends)
+    plot_walker_gameparams(save_loc, walker_ends, params)
 
 
 # fig, axes = plt.subplots(ndim, figsize=(10, 7), sharex=True)

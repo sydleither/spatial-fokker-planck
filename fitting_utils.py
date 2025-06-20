@@ -99,4 +99,5 @@ def evaluate_performance(fp, xdata, true_ydata, walker_ends, n, mu, awm, amw, sm
         "Variance in Curve MSE": np.var(mse),
         "Mean Probability Density": np.mean(true_ydata),
     }
+    #TODO add game quadrant distance
     return data | regimes | idv_param_distances | game_classifications

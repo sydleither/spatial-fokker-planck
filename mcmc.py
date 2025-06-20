@@ -22,7 +22,7 @@ def lnprob(params, func, x, y):
     if params[4] < 0 or params[4] > 1:
         return -np.inf
     # c
-    if params[5] < 0:
+    if params[5] < 0 or params[5] > 100:
         return -np.inf
     return -0.5 * np.sum((y - func(x, *params)) ** 2)
 

@@ -27,14 +27,14 @@ from individual_fitting_plots import gamespace_plot
 
 def game_spread(data_dir, experiment_name, samples):
     df = pd.DataFrame(samples, columns=["awm", "amw", "sm"])
-    df[["game", "a", "b", "c", "d"]] = df.apply(
+    df[["Game", "a", "b", "c", "d"]] = df.apply(
         lambda x: classify_game(x["awm"], x["amw"], x["sm"], True), axis=1, result_type="expand"
     )
     df["c-a"] = df["c"] - df["a"]
     df["b-d"] = df["b"] - df["d"]
 
     with open(f"{data_dir}/{experiment_name}/gamespread.txt", "w") as f:
-        f.write(df.groupby("game").count().to_string())
+        f.write(df.groupby("Game").count().to_string())
 
     fig, ax = plt.subplots(figsize=(4, 4))
     gamespace_plot(ax, df, "c-a", "b-d")
@@ -48,17 +48,16 @@ def main(data_dir, interaction_radius, reproduction_radius, run_command):
     """
     Generate scripts to run the ABM
     """
-    data_dir = get_data_path(data_dir, "raw")
-    experiment_name = f"{interaction_radius}_{reproduction_radius}"
+    data_dir = get_data_path(data_dir, f"{interaction_radius}_{reproduction_radius}")
+    experiment_name = "raw"
     space = "2D"
     end_time = 100
     grid_size = 200
-    scale = 0.5
 
     samples = []
-    for sm in np.round(np.arange(0.05, 0.55, 0.1), 2):
-        for awm in np.round(np.arange(-2*sm, 4*sm+0.1*sm*scale, sm*scale), 3):
-            for amw in np.round(np.arange(-4*sm, 2*sm+0.1*sm*scale, sm*scale), 3):
+    for sm in np.round(np.linspace(0.05, 0.3, 5), 3):
+        for awm in np.round(np.linspace(-2*sm, 4*sm, 10), 3):
+            for amw in np.round(np.linspace(-4*sm, 2*sm, 10), 3):
                 samples.append(({"awm": awm, "amw": amw, "sm":sm}))
 
     run_output = []
@@ -66,9 +65,7 @@ def main(data_dir, interaction_radius, reproduction_radius, run_command):
     for s, sample in enumerate(samples):
         config_name = str(s)
         seed = config_name
-        game, a, b, c, d = classify_game(sample["awm"], sample["amw"], sample["sm"], return_params=True)
-        if game == "unknown":
-            continue
+        _, a, b, c, d = classify_game(sample["awm"], sample["amw"], sample["sm"], return_params=True)
         payoff = [float(a), float(b), float(c), float(d)]
         write_config(
             data_dir,
