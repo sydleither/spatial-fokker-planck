@@ -26,7 +26,7 @@ def main(params):
     xdata = np.linspace(0.01, 0.99, 100)
 
     data = []
-    for sm in np.round(np.linspace(0.05, 0.3, 5), 3):
+    for sm in np.round(np.linspace(0.01, 0.29, 5), 3):
         for awm in np.round(np.linspace(-2*sm, 4*sm, 10), 3):
             for amw in np.round(np.linspace(-4*sm, 2*sm, 10), 3):
                 ydata = fp(xdata, n, mu, awm, amw, sm, c)

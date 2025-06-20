@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.spatial.distance import euclidean
 
 from common import classify_game, game_colors
 from fokker_planck import param_names
@@ -78,16 +79,27 @@ def quadrant_classification(true_params, walker_ends):
     return {"Correct Game Classifications": game_matches, "Game": game_colors[true_game]}
 
 
+def game_space_distance(true_params, walker_ends):
+    true_game_spot = [true_params[3]+true_params[4], true_params[2]-true_params[4]]
+    game_distances = []
+    for walker_end in walker_ends:
+        walker_game_spot = [walker_end[3]+walker_end[4], walker_end[2]-walker_end[4]]
+        game_distances.append(euclidean(true_game_spot, walker_game_spot))
+    game_distances = sum(game_distances) / len(game_distances)
+    return {"Mean Game Quadrant Distance": game_distances}
+
+
 def evaluate_performance(fp, xdata, true_ydata, walker_ends, n, mu, awm, amw, sm, c):
     true_params = np.array([n, mu, awm, amw, sm, c])
     len_data = len(xdata)
-    idv_param_distances = parameter_distances(true_params, walker_ends)
+    idv_param_dist = parameter_distances(true_params, walker_ends)
     mse = []
     for walker_params in walker_ends:
         walker_ydata = fp(xdata, *walker_params)
         mse.append(np.sum((true_ydata - walker_ydata) ** 2) / len_data)
     regimes = regime_distances(mu, awm, amw, sm)
-    game_classifications = quadrant_classification(true_params, walker_ends)
+    game_class= quadrant_classification(true_params, walker_ends)
+    quad_dist = game_space_distance(true_params, walker_ends)
     data = {
         "N": n,
         "mu": mu,
@@ -99,5 +111,4 @@ def evaluate_performance(fp, xdata, true_ydata, walker_ends, n, mu, awm, amw, sm
         "Variance in Curve MSE": np.var(mse),
         "Mean Probability Density": np.mean(true_ydata),
     }
-    #TODO add game quadrant distance
-    return data | regimes | idv_param_distances | game_classifications
+    return data | regimes | idv_param_dist | game_class | quad_dist

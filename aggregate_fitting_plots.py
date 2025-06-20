@@ -2,7 +2,6 @@ from matplotlib import cm
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 
-from common import game_colors
 from fokker_planck import param_names
 
 
@@ -81,8 +80,8 @@ def plot_paramsweep(save_loc, df, metric):
         amws = df_sm["amw"].unique()
         df_sm = df_sm.pivot(index="amw", columns="awm", values=metric)
         ax[i].imshow(df_sm, cmap=cmap, norm=norm)
-        ax[i].set_xticks(range(0, len(amws), 2), labels=amws[0::2])
-        ax[i].set_yticks(range(0, len(awms), 2), labels=awms[0::2])
+        ax[i].set_xticks(range(0, len(amws), 3), labels=amws[0::3])
+        ax[i].set_yticks(range(0, len(awms), 3), labels=awms[0::3])
         ax[i].set_title(r'$s_m$='+str(sm))
     fig.supxlabel(r'$\alpha_{mw}$')
     fig.supylabel(r'$\alpha_{wm}$')
@@ -101,11 +100,8 @@ def plot_paramsweep_game(save_loc, df):
     fig, ax = plt.subplots(1, len(sms), figsize=(2 * len(sms), 2), constrained_layout=True)
     for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
-        awms = df_sm["awm"].unique()
-        amws = df_sm["amw"].unique()
         ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["Game"], s=100)
-        ax[i].set_xticks(range(0, len(amws), 2), labels=amws[0::2])
-        ax[i].set_yticks(range(0, len(awms), 2), labels=awms[0::2])
+        ax[i].tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
         ax[i].set_title(r'$s_m$='+str(sm))
     fig.supxlabel(r'$\alpha_{mw}$')
     fig.supylabel(r'$\alpha_{wm}$')
@@ -137,10 +133,7 @@ def plot_all(save_loc, df):
         for param in param_names:
             param_name = f"Mean {param} Difference"
             f.write(get_confidence_interval_str(df, param_name))
-        f.write("All Games\n")
-        f.write("\t"+get_confidence_interval_str(df, "Correct Game Classifications"))
-        df_unk = df[df["Game"] != game_colors["Unknown"]]
-        f.write("Games Without Unknown\n")
-        f.write("\t"+get_confidence_interval_str(df_unk, "Correct Game Classifications"))
+        f.write(get_confidence_interval_str(df, "Correct Game Classifications"))
+        f.write(get_confidence_interval_str(df, "Mean Game Quadrant Distance"))
 
     df.to_csv(f"{save_loc}/df.csv", index=False)
