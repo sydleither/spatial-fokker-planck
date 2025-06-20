@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-from common import classify_game, game_colors
+from common import classify_game, game_colors, theme_colors
 from fokker_planck import param_names
 
 
@@ -38,7 +38,7 @@ def plot_walker_gamespace(save_loc, walker_ends, true_params):
         return
 
     df = pd.DataFrame(walker_ends, columns=["N", "mu", "awm", "amw", "sm", "c"])
-    df[["game", "a", "b", "c", "d"]] = df.apply(
+    df[["Game", "a", "b", "c", "d"]] = df.apply(
         lambda x: classify_game(x["awm"], x["amw"], x["sm"], True), axis=1, result_type="expand"
     )
     df["c-a"] = df["c"] - df["a"]
@@ -57,8 +57,8 @@ def plot_walker_pairplot(save_loc, walker_ends):
     """
     Pairplot of the parameters the walkers ended on.
     """
-    color1 = "xkcd:pink"
-    color2 = "xkcd:rose"
+    color1 = theme_colors[0]
+    color2 = theme_colors[0]
     df = pd.DataFrame(walker_ends, columns=["N", "mu", "awm", "amw", "sm", "c"])
     g = sns.pairplot(df, diag_kind="kde", plot_kws={"color": color1}, diag_kws={"color": color2})
     g.map_lower(sns.kdeplot, levels=4, color=color2)
@@ -101,7 +101,7 @@ def plot_walker_curve_mse(save_loc, func, walker_ends, xdata, true_ydata, logspa
         mse.append(np.sum((ydata - true_ydata) ** 2) / len_data)
 
     fig, ax = plt.subplots()
-    ax.hist(mse, bins=10, density=False, color="gray")
+    ax.hist(mse, bins=10, density=False, color=theme_colors[0])
     ax.set(xlabel="MSE", ylabel="Count", ylim=(0, len(walker_ends)))
     fig.patch.set_alpha(0)
     fig.savefig(f"{save_loc}/mcmc_curves_mse.png", bbox_inches="tight")
@@ -117,7 +117,7 @@ def plot_walker_gameparams(save_loc, walker_ends, true_game_params):
         1, len(param_names), figsize=(4 * len(param_names), 4), layout="constrained"
     )
     for i, payoff_param in enumerate(param_names):
-        ax[i].hist(df[payoff_param], bins=10, color="gray")
+        ax[i].hist(df[payoff_param], bins=10, color=theme_colors[0])
         ax[i].axvline(true_game_params[i], color="black", linestyle="dashed")
         ax[i].set(title=payoff_param, ylim=(0, len(walker_ends)))
     fig.patch.set_alpha(0)

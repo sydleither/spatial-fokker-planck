@@ -30,7 +30,7 @@ def plot_paramsweep_paper(save_loc, df, metrics, title):
     """
     sms = df["sm"].unique()
     fig, ax = plt.subplots(
-        len(metrics), len(sms), figsize=(3 * len(sms), 3 * len(metrics)), constrained_layout=True
+        len(metrics), len(sms), figsize=(2 * len(sms), 2 * len(metrics)), constrained_layout=True
     )
     for j, metric in enumerate(metrics):
         min_distance = df[metric].min()
@@ -64,7 +64,7 @@ def plot_paramsweep(save_loc, df, metric):
     Plot a metric across awm, amw, and sm.
     """
     sms = df["sm"].unique()
-    fig, ax = plt.subplots(1, len(sms), figsize=(3 * len(sms), 3), constrained_layout=True)
+    fig, ax = plt.subplots(1, len(sms), figsize=(2 * len(sms), 2), constrained_layout=True)
     min_distance = df[metric].min()
     max_distance = df[metric].max()
     if min_distance < 0:
@@ -95,10 +95,14 @@ def plot_paramsweep_game(save_loc, df):
     Plot game quadrant across awm, amw, and sm.
     """
     sms = df["sm"].unique()
-    fig, ax = plt.subplots(1, len(sms), figsize=(3 * len(sms), 3), constrained_layout=True)
+    fig, ax = plt.subplots(1, len(sms), figsize=(2 * len(sms), 2), constrained_layout=True)
     for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
-        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["Game"], s=200)
+        awms = df_sm["awm"].unique()
+        amws = df_sm["amw"].unique()
+        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["Game"], s=100)
+        ax[i].set_xticks(range(0, len(amws), 2), labels=amws[0::2])
+        ax[i].set_yticks(range(0, len(awms), 2), labels=awms[0::2])
         ax[i].set_xlabel(r'$\alpha_{mw}$')
         ax[i].set_ylabel(r'$\alpha_{wm}$')
         ax[i].set_title(r'$s_m$='+str(sm))
@@ -130,10 +134,10 @@ def plot_all(save_loc, df):
         for param in param_names:
             param_name = f"Mean {param} Difference"
             f.write(get_confidence_interval_str(df, param_name))
-        f.write("Games with unknown\n")
+        f.write("All Games\n")
         f.write("\t"+get_confidence_interval_str(df, "Correct Game Classifications"))
-        df = df[df["Game"] != game_colors["Unknown"]]
-        f.write("Games without unknown\n")
-        f.write("\t"+get_confidence_interval_str(df, "Correct Game Classifications"))
+        df_unk = df[df["Game"] != game_colors["Unknown"]]
+        f.write("Games Without Unknown\n")
+        f.write("\t"+get_confidence_interval_str(df_unk, "Correct Game Classifications"))
 
     df.to_csv(f"{save_loc}/df.csv", index=False)

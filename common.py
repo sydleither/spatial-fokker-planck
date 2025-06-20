@@ -16,6 +16,7 @@ game_colors = {
     "Resistant Wins": "#EF7C8E",
     "Unknown": "#929591",
 }
+theme_colors = ["xkcd:faded purple", "xkcd:yellow orange"]
 
 
 def get_data_path(data_type:str, data_stage:str):
