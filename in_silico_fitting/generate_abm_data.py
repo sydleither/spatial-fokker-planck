@@ -17,11 +17,11 @@ run_cmd: how to run the ABM samples
 import sys
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
 from common import classify_game, get_data_path
 from EGT_HAL.config_utils import write_config, write_run_scripts
+from fitting_utils import game_parameter_sweep
 from individual_fitting_plots import gamespace_plot
 
 
@@ -54,11 +54,10 @@ def main(data_dir, interaction_radius, reproduction_radius, run_command):
     end_time = 100
     grid_size = 200
 
+    game_parameters = game_parameter_sweep()
     samples = []
-    for sm in np.round(np.linspace(0.01, 0.29, 5), 3):
-        for awm in np.round(np.linspace(-2*sm, 4*sm, 10), 3):
-            for amw in np.round(np.linspace(-4*sm, 2*sm, 10), 3):
-                samples.append(({"awm": awm, "amw": amw, "sm":sm}))
+    for awm, amw, sm in game_parameters:
+        samples.append(({"awm": awm, "amw": amw, "sm":sm}))
 
     run_output = []
     run_str = f"{run_command} ../{data_dir} {experiment_name}"

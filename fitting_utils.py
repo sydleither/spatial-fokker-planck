@@ -5,6 +5,15 @@ from common import classify_game, game_colors
 from fokker_planck import param_names
 
 
+def game_parameter_sweep():
+    params = []
+    for sm in np.round(np.linspace(0.01, 0.29, 5), 3):
+        for awm in np.round(np.linspace(-2*sm, 4*sm, 10), 3):
+            for amw in np.round(np.linspace(-4*sm, 2*sm, 10), 3):
+                params.append((awm, amw, sm))
+    return params
+
+
 def get_regime_awms(mu, amw, sm, sigma):
     if sigma <= 0:
         print("sigma <= 0 invalid for getting regime awms")

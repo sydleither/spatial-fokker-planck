@@ -9,7 +9,7 @@ import pandas as pd
 
 from aggregate_fitting_plots import plot_all
 from common import get_data_path
-from fitting_utils import evaluate_performance
+from fitting_utils import evaluate_performance, game_parameter_sweep
 from fokker_planck import FokkerPlanck, param_names
 from mcmc import mcmc
 
@@ -24,15 +24,14 @@ def main(params):
 
     fp = FokkerPlanck().fokker_planck_log
     xdata = np.linspace(0.01, 0.99, 100)
+    game_parameters = game_parameter_sweep()
 
     data = []
-    for sm in np.round(np.linspace(0.01, 0.29, 5), 3):
-        for awm in np.round(np.linspace(-2*sm, 4*sm, 10), 3):
-            for amw in np.round(np.linspace(-4*sm, 2*sm, 10), 3):
-                ydata = fp(xdata, n, mu, awm, amw, sm, c)
-                walker_ends = np.array(mcmc(fp, xdata, ydata))
-                d = evaluate_performance(fp, xdata, ydata, walker_ends, n, mu, awm, amw, sm, c)
-                data.append(d)
+    for awm, amw, sm in game_parameters:
+        ydata = fp(xdata, n, mu, awm, amw, sm, c)
+        walker_ends = np.array(mcmc(fp, xdata, ydata))
+        d = evaluate_performance(fp, xdata, ydata, walker_ends, n, mu, awm, amw, sm, c)
+        data.append(d)
 
     params_str = "_".join([f"{param_names[i]}={params[i]}" for i in range(len(params))])
     save_loc = get_data_path("self", params_str)

@@ -1,6 +1,7 @@
 from matplotlib import cm
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
+import numpy as np
 
 from fokker_planck import param_names
 
@@ -41,12 +42,14 @@ def plot_paramsweep_paper(save_loc, df, metrics, title):
             norm = mcolors.Normalize(vmin=min_distance, vmax=max_distance)
             cmap = plt.get_cmap("Purples")
         scalarmap = cm.ScalarMappable(norm=norm, cmap=cmap)
-
         for i, sm in enumerate(sms):
             df_sm = df[df["sm"] == sm]
             df_sm = df_sm.pivot(index="amw", columns="awm", values=metric)
             ax[j][i].imshow(df_sm, cmap=cmap, norm=norm)
             ax[j][i].tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
+            ax[j][i].axvline(sum(ax.get_xlim()) / 2, color="black")
+            ax[j][i].axhline(sum(ax.get_ylim()) / 2, color="black")
+        if j == 0:
             ax[j][i].set_title(r'$s_m$='+str(sm))
         cbar = fig.colorbar(scalarmap, drawedges=False, ax=ax[j][-1])
         cbar.set_label(format_metric_name(metric))
@@ -76,12 +79,13 @@ def plot_paramsweep(save_loc, df, metric):
 
     for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
-        awms = df_sm["awm"].unique()
-        amws = df_sm["amw"].unique()
-        df_sm = df_sm.pivot(index="amw", columns="awm", values=metric)
+        df_sm = df_sm.pivot(index="awm", columns="amw", values=metric)
+        awms = df_sm.index.tolist()
+        amws = df_sm.columns.tolist()
         ax[i].imshow(df_sm, cmap=cmap, norm=norm)
-        ax[i].set_xticks(range(0, len(amws), 3), labels=amws[0::3])
-        ax[i].set_yticks(range(0, len(awms), 3), labels=awms[0::3])
+        ax[i].set_xticks(range(len(amws)), labels=amws, rotation=45, ha="right", rotation_mode="anchor")
+        ax[i].set_yticks(range(len(awms)), labels=awms)
+        ax[i].invert_yaxis()
         ax[i].set_title(r'$s_m$='+str(sm))
     fig.supxlabel(r'$\alpha_{mw}$')
     fig.supylabel(r'$\alpha_{wm}$')
@@ -101,7 +105,6 @@ def plot_paramsweep_game(save_loc, df):
     for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
         ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["Game"], s=100)
-        ax[i].tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
         ax[i].set_title(r'$s_m$='+str(sm))
     fig.supxlabel(r'$\alpha_{mw}$')
     fig.supylabel(r'$\alpha_{wm}$')
