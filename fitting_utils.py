@@ -5,11 +5,11 @@ from common import classify_game, game_colors
 from fokker_planck import param_names
 
 
-def game_parameter_sweep():
+def game_parameter_sweep(num_a=8, num_sm=5):
     params = []
-    for sm in np.round(np.linspace(0.01, 0.29, 5), 3):
-        for awm in np.round(np.linspace(-2*sm, 4*sm, 10), 3):
-            for amw in np.round(np.linspace(-4*sm, 2*sm, 10), 3):
+    for sm in np.round(np.linspace(0.01, 0.29, num_sm), 3):
+        for awm in np.round(np.linspace(-2*sm, 4*sm, num_a), 3):
+            for amw in np.round(np.linspace(-4*sm, 2*sm, num_a), 3):
                 params.append((awm, amw, sm))
     return params
 

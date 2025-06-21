@@ -1,7 +1,6 @@
 from matplotlib import cm
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
-import numpy as np
 
 from fokker_planck import param_names
 
@@ -47,10 +46,10 @@ def plot_paramsweep_paper(save_loc, df, metrics, title):
             df_sm = df_sm.pivot(index="amw", columns="awm", values=metric)
             ax[j][i].imshow(df_sm, cmap=cmap, norm=norm)
             ax[j][i].tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
-            ax[j][i].axvline(sum(ax[j][i].get_xlim()) / 2, color="black")
-            ax[j][i].axhline(sum(ax[j][i].get_ylim()) / 2, color="black")
-        if j == 0:
-            ax[j][i].set_title(r'$s_m$='+str(sm))
+            ax[j][i].axvline(sum(ax[j][i].get_xlim()) / 2, color="black", lw=1)
+            ax[j][i].axhline(sum(ax[j][i].get_ylim()) / 2, color="black", lw=1)
+            if j == 0:
+                ax[j][i].set_title(r'$s_m$='+str(sm))
         cbar = fig.colorbar(scalarmap, drawedges=False, ax=ax[j][-1])
         cbar.set_label(format_metric_name(metric))
     fig.suptitle(title)
@@ -66,7 +65,7 @@ def plot_paramsweep(save_loc, df, metric):
     Plot a metric across awm, amw, and sm.
     """
     sms = df["sm"].unique()
-    fig, ax = plt.subplots(1, len(sms), figsize=(2 * len(sms), 2), constrained_layout=True)
+    fig, ax = plt.subplots(1, len(sms), figsize=(3 * len(sms), 3), constrained_layout=True)
     min_distance = df[metric].min()
     max_distance = df[metric].max()
     if min_distance < 0:
@@ -104,7 +103,7 @@ def plot_paramsweep_game(save_loc, df):
     fig, ax = plt.subplots(1, len(sms), figsize=(2 * len(sms), 2), constrained_layout=True)
     for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
-        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["Game"], s=100)
+        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["Game"], s=90)
         ax[i].set_title(r'$s_m$='+str(sm))
     fig.supxlabel(r'$\alpha_{mw}$')
     fig.supylabel(r'$\alpha_{wm}$')
