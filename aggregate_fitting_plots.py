@@ -47,8 +47,8 @@ def plot_paramsweep_paper(save_loc, df, metrics, title):
             df_sm = df_sm.pivot(index="amw", columns="awm", values=metric)
             ax[j][i].imshow(df_sm, cmap=cmap, norm=norm)
             ax[j][i].tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
-            ax[j][i].axvline(sum(ax.get_xlim()) / 2, color="black")
-            ax[j][i].axhline(sum(ax.get_ylim()) / 2, color="black")
+            ax[j][i].axvline(sum(ax[j][i].get_xlim()) / 2, color="black")
+            ax[j][i].axhline(sum(ax[j][i].get_ylim()) / 2, color="black")
         if j == 0:
             ax[j][i].set_title(r'$s_m$='+str(sm))
         cbar = fig.colorbar(scalarmap, drawedges=False, ax=ax[j][-1])
