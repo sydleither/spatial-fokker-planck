@@ -91,8 +91,9 @@ def spatial_subsample(s_coords, r_coords, sample_length, num_samples=5000):
             continue
         fr_counts.append(subset_r / subset_total)
 
-    xdata = np.linspace(min(fr_counts), max(fr_counts), 100)
+    xdata = np.linspace(max(min(fr_counts), 0.001), min(max(fr_counts), 0.999), 100)
     kde = stats.gaussian_kde(fr_counts)
     pdf = kde(xdata)
     neg_lnpdf = -np.log(pdf)
+    #neg_lnpdf = pdf / max(pdf)
     return xdata, neg_lnpdf

@@ -35,19 +35,19 @@ class FokkerPlanck:
         print()
         return rho
 
-    def fokker_planck_normalized(self, x, n, mu, awm, amw, sm):
+    def fokker_planck_normalized(self, x, n, mu, awm, amw, sm, c):
         """
         Return the normalized rho.
         """
-        rho = self.fokker_planck(x, n, mu, awm, amw, sm)
+        rho = self.fokker_planck(x, n, mu, awm, amw, sm, c)
         rho = rho / max(rho)
         return rho
 
-    def fokker_planck_density(self, x, n, mu, awm, amw, sm):
+    def fokker_planck_density(self, x, n, mu, awm, amw, sm, c):
         """
         Return the probability density of rho.
         """
-        rho = self.fokker_planck(x, n, mu, awm, amw, sm)
+        rho = self.fokker_planck(x, n, mu, awm, amw, sm, c)
         rho = rho / (np.sum(rho) * x[0])
         return rho
 

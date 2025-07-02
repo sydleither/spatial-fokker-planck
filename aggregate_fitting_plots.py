@@ -103,7 +103,7 @@ def plot_paramsweep_game(save_loc, df):
     fig, ax = plt.subplots(1, len(sms), figsize=(2 * len(sms), 2), constrained_layout=True)
     for i, sm in enumerate(sms):
         df_sm = df[df["sm"] == sm]
-        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["Game"], s=90)
+        ax[i].scatter(df_sm["amw"], df_sm["awm"], c=df_sm["Game"], s=75)
         ax[i].set_title(r'$s_m$='+str(sm))
     fig.supxlabel(r'$\alpha_{mw}$')
     fig.supylabel(r'$\alpha_{wm}$')
