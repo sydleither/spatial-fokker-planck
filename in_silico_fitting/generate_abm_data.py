@@ -52,6 +52,7 @@ def main(data_dir, interaction_radius, reproduction_radius, run_command):
     experiment_name = "raw"
     space = "2D"
     end_time = 200
+    write_freq = 50
     grid_size = 200
 
     game_parameters = game_parameter_sweep()
@@ -78,8 +79,8 @@ def main(data_dir, interaction_radius, reproduction_radius, run_command):
             y=grid_size,
             interaction_radius=interaction_radius,
             reproduction_radius=reproduction_radius,
-            write_freq=end_time,
-            ticks=50,
+            write_freq=write_freq,
+            ticks=end_time,
         )
         run_output.append(f"{run_str} {config_name} {space} {seed}\n")
     write_run_scripts(data_dir, experiment_name, run_output)

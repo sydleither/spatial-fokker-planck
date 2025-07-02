@@ -14,11 +14,11 @@ from mcmc import mcmc
 
 def main(params):
     """
-    Given a set of params (N, mu, awm, amw, sm)
+    Given a set of params (N, mu, awm, amw, sm, c)
     Generate a distribution using Fokker-Planck equation with those params
     Give the distribution and Fokker-Planck equation to MCMC
     """
-    true_params = [float(x) for x in params] + [1]
+    true_params = [float(x) for x in params]
     fp = FokkerPlanck().fokker_planck_log
     xdata = np.linspace(0.01, 0.99, 100)
     ydata = fp(xdata, *true_params)
@@ -30,7 +30,7 @@ def main(params):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 6:
-        print("Please provide N, mu, awm, amw, and sm as arguments.")
+    if len(sys.argv) != 7:
+        print("Please provide N, mu, awm, amw, sm, and c as arguments.")
     else:
         main(sys.argv[1:])
