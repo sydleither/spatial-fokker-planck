@@ -59,6 +59,7 @@ def main(data_dir, interaction_radius, reproduction_radius, run_command):
     samples = []
     for awm, amw, sm in game_parameters:
         samples.append(({"awm": awm, "amw": amw, "sm":sm}))
+    game_spread(data_dir, experiment_name, samples)
 
     run_output = []
     run_str = f"{run_command} ../{data_dir} {experiment_name}"
@@ -84,7 +85,6 @@ def main(data_dir, interaction_radius, reproduction_radius, run_command):
         )
         run_output.append(f"{run_str} {config_name} {space} {seed}\n")
     write_run_scripts(data_dir, experiment_name, run_output)
-    game_spread(data_dir, experiment_name, samples)
 
 
 if __name__ == "__main__":

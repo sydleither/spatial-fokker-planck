@@ -11,7 +11,7 @@ import pandas as pd
 from aggregate_fitting_plots import plot_all
 from common import calculate_fp_params, get_data_path, spatial_subsample
 from fitting_utils import evaluate_performance
-from fokker_planck import FokkerPlanck
+from pdfs import FokkerPlanck
 from mcmc import mcmc
 
 

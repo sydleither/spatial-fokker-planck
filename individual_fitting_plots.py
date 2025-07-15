@@ -4,7 +4,7 @@ import pandas as pd
 import seaborn as sns
 
 from common import classify_game, game_colors, theme_colors
-from fokker_planck import param_names
+from pdfs import param_names
 
 
 def gamespace_plot(ax, df, x, y):
@@ -28,7 +28,7 @@ def gamespace_plot(ax, df, x, y):
 
 def plot_walker_gamespace(save_loc, walker_ends, true_params):
     """
-    Plots of the final walker params on the Fokker-Planck transformed and normal game spaces.
+    Plots of the final walker params on the game space.
     """
     if len(true_params) == 3:
         _, a, b, c, d = classify_game(*true_params, return_params=True)
@@ -37,7 +37,7 @@ def plot_walker_gamespace(save_loc, walker_ends, true_params):
     else:
         return
 
-    df = pd.DataFrame(walker_ends, columns=["N", "mu", "awm", "amw", "sm", "c"])
+    df = pd.DataFrame(walker_ends, columns=param_names)
     df[["Game", "a", "b", "c", "d"]] = df.apply(
         lambda x: classify_game(x["awm"], x["amw"], x["sm"], True), axis=1, result_type="expand"
     )
@@ -49,7 +49,7 @@ def plot_walker_gamespace(save_loc, walker_ends, true_params):
     ax.scatter([c - a], [b - d], marker="*", color="black")
     fig.tight_layout()
     fig.patch.set_alpha(0)
-    fig.savefig(f"{save_loc}/mcmc_gamespace.png", bbox_inches="tight")
+    fig.savefig(f"{save_loc}/mcmc_gamespace.png", bbox_inches="tight", dpi=200)
     plt.close()
 
 
@@ -66,25 +66,19 @@ def plot_walker_pairplot(save_loc, walker_ends):
     plt.close()
 
 
-def plot_walker_curves(save_loc, func, walker_ends, xdata, true_ydata, logspace=True):
+def plot_walker_curves(save_loc, func, walker_ends, xdata, true_ydata):
     """
     Visualize curves resulting from walker end parameters.
     """
     fig, ax = plt.subplots()
     for params in walker_ends:
         ydata = func(xdata, *params)
-        if logspace:
-            ydata = np.exp(-ydata + params[-1])
         game = classify_game(*params[2:5])
         ax.plot(xdata, ydata, alpha=0.5, color=game_colors[game])
-    if logspace:
-        true_ydata = np.exp(-true_ydata)
     ax.plot(xdata, true_ydata, color="black", ls="--")
-    if logspace:
-        ax.set(ylim=(0, 2*true_ydata.max()))
     ax.set(xlabel="Fraction Mutant", ylabel="Probability Density")
     fig.patch.set_alpha(0)
-    fig.savefig(f"{save_loc}/mcmc_curves_{logspace}.png", bbox_inches="tight")
+    fig.savefig(f"{save_loc}/mcmc_curves.png", bbox_inches="tight")
     plt.close()
 
 
@@ -123,20 +117,45 @@ def plot_walker_gameparams(save_loc, walker_ends, true_game_params):
     plt.close()
 
 
+def plot_true_curve(save_loc, params, xdata, ydata):
+    """
+    Visualize the true curve.
+    """
+    title = [f"{param_names[i]}={params[i]}" for i in range(len(params))]
+    fig, ax = plt.subplots(figsize=(4, 4))
+    classified_game = classify_game(params[2], params[3], params[4])
+    ax.plot(xdata, ydata, color=game_colors[classified_game], linewidth=3)
+    ax.set(title=" ".join(title))
+    fig.supxlabel("Fraction Mutant")
+    fig.supylabel("Probability Density")
+    fig.tight_layout()
+    fig.patch.set_alpha(0)
+    fig.savefig(f"{save_loc}/curve.png", bbox_inches="tight")
+
+
 def plot_all(save_loc, fp, walker_ends, xdata, ydata, params):
-    plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata, True)
-    plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata, False)
+    plot_true_curve(save_loc, params, xdata, ydata)
+    plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata)
     plot_walker_curve_mse(save_loc, fp, walker_ends, xdata, ydata)
     plot_walker_gamespace(save_loc, walker_ends, params[2:5])
     plot_walker_pairplot(save_loc, walker_ends)
     plot_walker_gameparams(save_loc, walker_ends, params)
 
 
-# fig, axes = plt.subplots(ndim, figsize=(10, 7), sharex=True)
-# for i in range(ndim):
-#     axes[i].plot(sampler.get_chain()[:, :, i], alpha=0.5)
-#     axes[i].set_ylabel(param_names[i])
-# axes[-1].set_xlabel("Step number")
-# plt.tight_layout()
-# fig.savefig("trace.png")
-# plt.close()
+def plot_trace(save_loc, sampler, true_params, fit_params):
+    ndim = len([x for x in fit_params if x == 1])
+    fig, ax = plt.subplots(ndim, figsize=(10, 7), sharex=True)
+    i = 0
+    a = 0
+    for fit_param in fit_params:
+        if fit_param == 1:
+            ax[a].plot(sampler.get_chain()[:, :, a], alpha=0.5)
+            ax[a].axhline(true_params[i], color="black", ls="--")
+            ax[a].set_ylabel(param_names[i])
+            a += 1
+        i += 1
+    ax[-1].set_xlabel("Step Number")
+    fig.tight_layout()
+    fig.patch.set_alpha(0)
+    fig.savefig(f"{save_loc}/trace.png")
+    plt.close()

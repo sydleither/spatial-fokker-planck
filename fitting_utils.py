@@ -2,12 +2,12 @@ import numpy as np
 from scipy.spatial.distance import euclidean
 
 from common import classify_game, game_colors
-from fokker_planck import param_names
+from pdfs import param_names
 
 
 def game_parameter_sweep(num_a=12, num_sm=5):
     params = []
-    for sm in np.round(np.linspace(0.01, 0.29, num_sm), 3):
+    for sm in np.round(np.linspace(0.01, 0.25, num_sm), 3):
         for awm in np.round(np.linspace(-2*sm, 4*sm, num_a), 3):
             for amw in np.round(np.linspace(-4*sm, 2*sm, num_a), 3):
                 params.append((awm, amw, sm))
@@ -90,12 +90,12 @@ def quadrant_classification(true_params, walker_ends):
 
 def game_space_distance(true_params, walker_ends):
     true_game_spot = [true_params[3]+true_params[4], true_params[2]-true_params[4]]
-    game_distances = []
+    walker_spots = []
     for walker_end in walker_ends:
         walker_game_spot = [walker_end[3]+walker_end[4], walker_end[2]-walker_end[4]]
-        game_distances.append(euclidean(true_game_spot, walker_game_spot))
-    game_distances = sum(game_distances) / len(game_distances)
-    return {"Mean Game Quadrant Distance": game_distances}
+        walker_spots.append(walker_game_spot)
+    game_distance = euclidean(true_game_spot, np.mean(np.array(walker_spots), axis=0))
+    return {"Game Quadrant Distance": game_distance}
 
 
 def evaluate_performance(fp, xdata, true_ydata, walker_ends, n, mu, awm, amw, sm, c):

@@ -2,7 +2,7 @@ from matplotlib import cm
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 
-from fokker_planck import param_names
+from pdfs import param_names
 
 
 def format_metric_name(metric):
