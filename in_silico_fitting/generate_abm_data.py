@@ -19,7 +19,7 @@ import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from common import classify_game, get_data_path
+from common import classify_game, get_data_path, calculate_fp_params
 from EGT_HAL.config_utils import write_config, write_run_scripts
 from fitting_utils import game_parameter_sweep
 from individual_fitting_plots import gamespace_plot
@@ -28,7 +28,9 @@ from individual_fitting_plots import gamespace_plot
 def game_spread(data_dir, experiment_name, samples):
     df = pd.DataFrame(samples, columns=["awm", "amw", "sm"])
     df[["Game", "a", "b", "c", "d"]] = df.apply(
-        lambda x: classify_game(x["awm"], x["amw"], x["sm"], True), axis=1, result_type="expand"
+        lambda x: classify_game(x["awm"], x["amw"], x["sm"], return_params=True),
+        axis=1,
+        result_type="expand",
     )
     df["c-a"] = df["c"] - df["a"]
     df["b-d"] = df["b"] - df["d"]
@@ -40,7 +42,7 @@ def game_spread(data_dir, experiment_name, samples):
     gamespace_plot(ax, df, "c-a", "b-d")
     fig.tight_layout()
     fig.patch.set_alpha(0)
-    fig.savefig(f"{data_dir}/{experiment_name}/gamespace.png", bbox_inches="tight")
+    fig.savefig(f"{data_dir}/{experiment_name}/gamespace.png", bbox_inches="tight", dpi=200)
     plt.close()
 
 
@@ -51,23 +53,24 @@ def main(data_dir, interaction_radius, reproduction_radius, run_command):
     data_dir = get_data_path(data_dir, f"{interaction_radius}_{reproduction_radius}")
     experiment_name = "raw"
     space = "2D"
-    end_time = 200
-    write_freq = 50
+    end_time = 500
+    write_freq = 100
     grid_size = 200
 
-    game_parameters = game_parameter_sweep()
+    game_parameters = game_parameter_sweep(r=0.25)
     samples = []
     for awm, amw, sm in game_parameters:
-        samples.append(({"awm": awm, "amw": amw, "sm":sm}))
-    game_spread(data_dir, experiment_name, samples)
+        samples.append(({"awm": awm, "amw": amw, "sm": sm}))
 
     run_output = []
     run_str = f"{run_command} ../{data_dir} {experiment_name}"
     for s, sample in enumerate(samples):
         config_name = str(s)
         seed = config_name
-        _, a, b, c, d = classify_game(sample["awm"], sample["amw"], sample["sm"], return_params=True)
-        payoff = [float(a), float(b), float(c), float(d)]
+        _, a, b, c, d = classify_game(
+            sample["awm"], sample["amw"], sample["sm"], norm=0.5, return_params=True
+        )
+        payoff = [a, b, c, d]
         write_config(
             data_dir,
             experiment_name,
@@ -85,6 +88,7 @@ def main(data_dir, interaction_radius, reproduction_radius, run_command):
         )
         run_output.append(f"{run_str} {config_name} {space} {seed}\n")
     write_run_scripts(data_dir, experiment_name, run_output)
+    game_spread(data_dir, experiment_name, samples)
 
 
 if __name__ == "__main__":

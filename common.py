@@ -44,14 +44,14 @@ def calculate_fp_params(a, b, c, d):
     return awm, amw, sm
 
 
-def classify_game(awm, amw, sm, return_params=False):
+def classify_game(awm, amw, sm, norm=1, return_params=False):
     """
     Convert from FP terms to game quadrant
     """
-    a = 1
-    b = 1 + awm
-    c = 1 + sm + amw
-    d = 1 + sm
+    a = norm
+    b = norm + awm
+    c = norm + sm + amw
+    d = norm + sm
 
     if np.isclose(a, c) or np.isclose(b, d):
         game = "Unknown"
