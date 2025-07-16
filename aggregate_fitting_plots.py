@@ -128,7 +128,7 @@ def plot_all(save_loc, df):
             plot_paramsweep(save_loc, df, metric)
     game_params = [f"Mean {x} Difference" for x in ["sm", "awm", "amw"]]
     plot_paramsweep_paper(save_loc, df, game_params, "Self-Fitting Results")
-    other_params = [f"Mean {x} Difference" for x in ["N", "mu", "c"]]
+    other_params = [f"Mean {x} Difference" for x in ["n", "mu", "c"]]
     plot_paramsweep_paper(save_loc, df, other_params, "Self-Fitting Results: N, mu, C")
 
     with open(f"{save_loc}/mean_param_diff_ci.txt", "w") as f:
