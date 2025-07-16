@@ -42,7 +42,7 @@ def lnprob(params, func, x, y, set_params):
     return -0.5 * np.sum((y - func(x, *full_params))**2)
 
 
-def mcmc(func, xdata, ydata, true_params, fit_params, nwalkers=200, niter=5000, return_sampler=False):
+def mcmc(func, xdata, ydata, true_params, fit_params, nwalkers=100, niter=1000, return_sampler=False):
     """
     Run MCMC over given params on true xdata, ydata and return walker end locations.
     """
