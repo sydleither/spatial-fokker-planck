@@ -37,7 +37,7 @@ def confusion_matrix(save_loc, save_info, df):
 
 
 def plot_curves(save_loc, save_info, game_order, supports, spsb_pdfs, fp_pdfs, games):
-    game_ax = {game:i for i,game in enumerate(game_order)}
+    game_ax = {game: i for i, game in enumerate(game_order)}
     fig, ax = plt.subplots(4, 2, figsize=(4, 8))
     for i in range(len(games)):
         game = games[i]
@@ -65,6 +65,13 @@ def main():
     parser.add_argument("-sub", "--subsample_length", type=int, default=5)
     args = parser.parse_args()
 
+    if args.transform == "norm":
+        fit_c = 0
+        c = 1
+    else:
+        fit_c = 1
+        c = 0
+
     # Define functions and variables
     fp = FokkerPlanck().get_fokker_planck(args.transform)
     spsb = SpatialSubsample().get_spatial_subsample(args.transform)
@@ -84,7 +91,7 @@ def main():
         s_coords, r_coords, config = read_sample(data_path, sample)
         awm, amw, sm = calculate_fp_params(config["A"], config["B"], config["C"], config["D"])
         xdata, spsb_ydata = spsb(s_coords, r_coords, subsample_length, 500)
-        walker_ends = mcmc(fp, xdata, spsb_ydata, [0, 0, awm, amw, sm, 0], [1, 1, 0, 0, 0, 1])
+        walker_ends = mcmc(fp, xdata, spsb_ydata, [0, 0, awm, amw, sm, c], [1, 1, 0, 0, 0, fit_c])
         mean_walker = np.mean(np.array(walker_ends), axis=0)
         fp_ydata = fp(xdata, mean_walker[0], mean_walker[1], awm, amw, sm, mean_walker[-1])
         supports.append(xdata)
@@ -96,10 +103,10 @@ def main():
     distance_data = []
     for i in range(len(spsb_pdfs)):
         for j in range(len(fp_pdfs)):
-            if i == j: #Distributions generated with the same parameters
+            if i == j:  # Distributions generated with the same parameters
                 continue
             euclid = euclidean(spsb_pdfs[i], fp_pdfs[j])
-            distance_data.append({"Distance":euclid, "SpSb Game": games[i], "FP Game": games[j]})
+            distance_data.append({"Distance": euclid, "SpSb Game": games[i], "FP Game": games[j]})
     df = pd.DataFrame(distance_data)
     save_loc = get_data_path(f"{data_type}/{source}", "images")
     game_order = [x for x in game_colors if x != "Unknown"]

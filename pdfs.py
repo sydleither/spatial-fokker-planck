@@ -98,8 +98,6 @@ class SpatialSubsample:
         xdata = np.linspace(max(min(fr_counts), 0.001), min(max(fr_counts), 0.999), 100)
         kde = stats.gaussian_kde(fr_counts)
         pdf = kde(xdata)
-        # pdf, bin_edges = np.histogram(fr_counts, bins=101, range=(max(min(fr_counts), 0.001), min(max(fr_counts), 0.999)), density=True)
-        # xdata = (bin_edges[:-1] + bin_edges[1:]) / 2
         return xdata, pdf
     
     def spatial_subsample_log(self, s_coords, r_coords, sample_length, num_samples=5000):

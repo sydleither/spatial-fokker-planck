@@ -43,7 +43,7 @@ def plot_paramsweep_paper(save_loc, df, metrics, title):
         scalarmap = cm.ScalarMappable(norm=norm, cmap=cmap)
         for i, sm in enumerate(sms):
             df_sm = df[df["sm"] == sm]
-            df_sm = df_sm.pivot(index="amw", columns="awm", values=metric)
+            df_sm = df_sm.pivot(index="awm", columns="amw", values=metric)
             ax[j][i].imshow(df_sm, cmap=cmap, norm=norm)
             ax[j][i].tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
             ax[j][i].axvline(sum(ax[j][i].get_xlim()) / 2, color="black", lw=1)
