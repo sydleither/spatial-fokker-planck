@@ -136,6 +136,6 @@ def plot_all(save_loc, df):
             param_name = f"Mean {param} Difference"
             f.write(get_confidence_interval_str(df, param_name))
         f.write(get_confidence_interval_str(df, "Correct Game Classifications"))
-        f.write(get_confidence_interval_str(df, "Mean Game Quadrant Distance"))
+        f.write(get_confidence_interval_str(df, "Game Quadrant Distance"))
 
     df.to_csv(f"{save_loc}/df.csv", index=False)

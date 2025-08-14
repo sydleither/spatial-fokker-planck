@@ -91,7 +91,7 @@ def main():
         s_coords, r_coords, config = read_sample(data_path, sample)
         awm, amw, sm = calculate_fp_params(config["A"], config["B"], config["C"], config["D"])
         xdata, spsb_ydata = spsb(s_coords, r_coords, subsample_length, 500)
-        walker_ends = mcmc(fp, xdata, spsb_ydata, [0, 0, awm, amw, sm, c], [1, 1, 0, 0, 0, fit_c])
+        walker_ends = mcmc(fp, xdata, spsb_ydata, [0, 0, awm, amw, sm, c], [1, 1, 0, 0, 0, fit_c], niter=10000)
         mean_walker = np.mean(np.array(walker_ends), axis=0)
         fp_ydata = fp(xdata, mean_walker[0], mean_walker[1], awm, amw, sm, mean_walker[-1])
         supports.append(xdata)
