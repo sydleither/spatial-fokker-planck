@@ -31,6 +31,8 @@ def main():
     parser.add_argument("-fit_sm", "--fit_sm", type=int, default=1)
     parser.add_argument("-fit_c", "--fit_c", type=int, default=1)
     parser.add_argument("-t", "--transform", type=str, default="none")
+    parser.add_argument("-w", "--walkers", type=int, default=100)
+    parser.add_argument("-i", "--iterations", type=int, default=5000)
     args = parser.parse_args()
 
     true_params = [args.n, args.mu, args.awm, args.amw, args.sm, args.c]
@@ -39,12 +41,21 @@ def main():
     ydata = fp(xdata, *true_params)
 
     fit_params = [args.fit_n, args.fit_mu, args.fit_awm, args.fit_amw, args.fit_sm, args.fit_c]
-    sampler, walker_ends = mcmc(fp, xdata, ydata, true_params, fit_params, return_sampler=True)
+    sampler, walker_ends = mcmc(
+        fp,
+        xdata,
+        ydata,
+        true_params,
+        fit_params,
+        args.walkers,
+        args.iterations,
+        return_sampler=True,
+    )
 
     params_str = "_".join([str(x) for x in true_params + fit_params])
     params_str = args.transform + "_" + params_str
     save_loc = get_data_path("self", params_str)
-    plot_all(save_loc, fp, walker_ends, xdata, ydata, true_params)
+    plot_all(save_loc, fp, walker_ends, xdata, ydata, true_params, fit_params)
     plot_trace(save_loc, sampler, true_params, fit_params)
 
 

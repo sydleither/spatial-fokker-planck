@@ -39,7 +39,9 @@ def plot_walker_gamespace(save_loc, walker_ends, true_params):
 
     df = pd.DataFrame(walker_ends, columns=param_names)
     df[["Game", "a", "b", "c", "d"]] = df.apply(
-        lambda x: classify_game(x["awm"], x["amw"], x["sm"], True), axis=1, result_type="expand"
+        lambda x: classify_game(x["awm"], x["amw"], x["sm"], return_params=True),
+        axis=1,
+        result_type="expand",
     )
     df["c-a"] = df["c"] - df["a"]
     df["b-d"] = df["b"] - df["d"]
@@ -53,13 +55,15 @@ def plot_walker_gamespace(save_loc, walker_ends, true_params):
     plt.close()
 
 
-def plot_walker_pairplot(save_loc, walker_ends):
+def plot_walker_pairplot(save_loc, walker_ends, fit_params):
     """
     Pairplot of the parameters the walkers ended on.
     """
     color1 = theme_colors[0]
     color2 = theme_colors[0]
-    df = pd.DataFrame(walker_ends, columns=["N", "mu", "awm", "amw", "sm", "c"])
+    params_to_plot = [param_names[i] for i in range(len(fit_params)) if fit_params[i] == 1]
+    df = pd.DataFrame(walker_ends, columns=param_names)
+    df = df[params_to_plot]
     g = sns.pairplot(df, diag_kind="kde", plot_kws={"color": color1}, diag_kws={"color": color2})
     g.map_lower(sns.kdeplot, levels=4, color=color2)
     plt.savefig(f"{save_loc}/mcmc_pairplot.png", transparent=True)
@@ -100,18 +104,20 @@ def plot_walker_curve_mse(save_loc, func, walker_ends, xdata, true_ydata):
     plt.close()
 
 
-def plot_walker_gameparams(save_loc, walker_ends, true_game_params):
+def plot_walker_gameparams(save_loc, walker_ends, true_game_params, fit_params):
     """
     Histograms of the game parameters the walkers ended on.
     """
+    vals_to_plot = [true_game_params[i] for i in range(len(fit_params)) if fit_params[i] == 1]
+    params_to_plot = [param_names[i] for i in range(len(fit_params)) if fit_params[i] == 1]
     df = pd.DataFrame(walker_ends, columns=param_names)
     fig, ax = plt.subplots(
-        1, len(param_names), figsize=(4 * len(param_names), 4), layout="constrained"
+        1, len(params_to_plot), figsize=(4 * len(params_to_plot), 4), layout="constrained"
     )
-    for i, payoff_param in enumerate(param_names):
-        ax[i].hist(df[payoff_param], bins=10, color=theme_colors[0])
-        ax[i].axvline(true_game_params[i], color="black", linestyle="dashed")
-        ax[i].set(title=payoff_param, ylim=(0, len(walker_ends)))
+    for i, param in enumerate(params_to_plot):
+        ax[i].hist(df[param], bins=10, color=theme_colors[0])
+        ax[i].axvline(vals_to_plot[i], color="black", linestyle="dashed")
+        ax[i].set(title=param, ylim=(0, len(walker_ends)))
     fig.patch.set_alpha(0)
     fig.savefig(f"{save_loc}/mcmc_gameparams.png", bbox_inches="tight")
     plt.close()
@@ -133,13 +139,13 @@ def plot_true_curve(save_loc, params, xdata, ydata):
     fig.savefig(f"{save_loc}/curve.png", bbox_inches="tight")
 
 
-def plot_all(save_loc, fp, walker_ends, xdata, ydata, params):
+def plot_all(save_loc, fp, walker_ends, xdata, ydata, params, fit_params):
     plot_true_curve(save_loc, params, xdata, ydata)
     plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata)
     plot_walker_curve_mse(save_loc, fp, walker_ends, xdata, ydata)
     plot_walker_gamespace(save_loc, walker_ends, params[2:5])
-    plot_walker_pairplot(save_loc, walker_ends)
-    plot_walker_gameparams(save_loc, walker_ends, params)
+    plot_walker_pairplot(save_loc, walker_ends, fit_params)
+    plot_walker_gameparams(save_loc, walker_ends, params, fit_params)
 
 
 def plot_trace(save_loc, sampler, true_params, fit_params):
