@@ -2,52 +2,64 @@
 Use MCMC to self-fit fokker-planck curves across a range of true parameters
 """
 
-import json
+import argparse
 import os
-import sys
 
 import pandas as pd
 
+from abm_utils import read_sample
 from aggregate_fitting_plots import plot_all
-from common import calculate_fp_params, get_data_path, spatial_subsample
+from common import calculate_fp_params, get_data_path
 from fitting_utils import evaluate_performance
-from pdfs import FokkerPlanck
+from pdfs import FokkerPlanck, SpatialSubsample
 from mcmc import mcmc
 
 
-def main(data_type, source):
+def main():
     """
     Iterate over ABM spatial subsample distributions. Calculate quality of MCMC fit.
     """
-    n = 100
-    mu = 0
-    c = 1
-    fp = FokkerPlanck().fokker_planck_log
-    subsample_length = 5
+    # Read in arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--transform", type=str, default="none")
+    parser.add_argument("-d", "--data_type", type=str, default="in_silico")
+    parser.add_argument("-src", "--source", type=str, default="5_5")
+    parser.add_argument("-sub", "--subsample_length", type=int, default=5)
+    parser.add_argument("-w", "--walkers", type=int, default=100)
+    parser.add_argument("-i", "--iterations", type=int, default=50000)
+    args = parser.parse_args()
 
-    data_path = get_data_path(f"{data_type}/{source}", "raw")
+    # Define functions and variables
+    data_path = get_data_path(f"{args.data_type}/{args.source}", "raw")
+    fp = FokkerPlanck().get_fokker_planck(args.transform)
+    spsb = SpatialSubsample().get_spatial_subsample(args.transform)
+    fit_params = [1, 1, 1, 1, 1, 1]
+    n = 100
+    mu = 0.01
+    c = 1
+    subsample_length = args.subsample_length
+    walkers = args.walkers
+    iterations = args.iterations
+
+    # Iterate over samples and calculate fit quality
+    data_path = get_data_path(f"{args.data_type}/{args.source}", "raw")
     data = []
     for sample in data_path:
-        if not os.path.isdir({data_path}/{sample}):
+        if not os.path.isdir({data_path} / {sample}):
             continue
-        df = pd.read_csv(f"{data_path}/{sample}/{sample}/2Dcoords.csv")
-        df = df[df["time"] == df["time"].max()]
-        s_coords = df.loc[df["type"] == 0][["x", "y"]].values
-        r_coords = df.loc[df["type"] == 1][["x", "y"]].values
-        config = json.loads(open(f"{data_path}/{source}/{sample}/{sample}.json").read())
+        s_coords, r_coords, config = read_sample(data_path, sample)
         awm, amw, sm = calculate_fp_params(config["A"], config["B"], config["C"], config["D"])
-        xdata, ydata = spatial_subsample(s_coords, r_coords, subsample_length)
-        walker_ends = mcmc(fp, xdata, ydata, 100, 1000)
+        params = [n, mu, awm, amw, sm, c]
+        xdata, ydata = spsb(s_coords, r_coords, subsample_length)
+        walker_ends = mcmc(fp, xdata, ydata, params, fit_params, walkers, iterations)
         d = evaluate_performance(fp, xdata, ydata, walker_ends, n, mu, awm, amw, sm, c)
         data.append(d)
 
-    save_loc = get_data_path(f"{data_type}/{source}", "images")
+    # Save results
+    save_loc = get_data_path(f"{args.data_type}/{args.source}", "images")
     df = pd.DataFrame(data)
     plot_all(save_loc, df)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Please provide the data type and source.")
-    else:
-        main(*sys.argv[1:])
+    main()
