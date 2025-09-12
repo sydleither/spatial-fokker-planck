@@ -1,6 +1,6 @@
+import argparse
 import json
 import os
-import sys
 
 import pandas as pd
 import seaborn as sns
@@ -24,10 +24,19 @@ def plot_proportion_resistant(save_loc, df, games):
     facet.savefig(f"{save_loc}/fr_over_time.png", bbox_inches="tight")
 
 
-def main(data_type, source):
-    data_path = get_data_path(f"{data_type}/{source}", "raw")
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--transform", type=str, default="none")
+    parser.add_argument("-d", "--data_type", type=str, default="in_silico")
+    parser.add_argument("-src", "--source", type=str, default="5_5")
+    parser.add_argument("-sub", "--subsample_length", type=int, default=5)
+    parser.add_argument("-w", "--walkers", type=int, default=100)
+    parser.add_argument("-i", "--iterations", type=int, default=50000)
+    args = parser.parse_args()
+
+    data_path = get_data_path(f"{args.data_type}/{args.source}", "raw")
     data = []
-    for sample in os.listdir(data_path)[0:100]:
+    for sample in os.listdir(data_path):
         if os.path.isfile(f"{data_path}/{sample}"):
             continue
         config = json.loads(open(f"{data_path}/{sample}/{sample}.json").read())
@@ -39,19 +48,20 @@ def main(data_type, source):
             df_time = df[df["time"] == time]
             sensitive = len(df_time[df_time["type"] == 0])
             resistant = len(df_time[df_time["type"] == 1])
-            data.append({
-                "Sample": sample,
-                "Time": time,
-                "Proportion Resistant": resistant / (sensitive + resistant),
-                "Game": game
-            })
+            data.append(
+                {
+                    "Sample": sample,
+                    "Time": time,
+                    "Proportion Resistant": resistant / (sensitive + resistant),
+                    "Game": game,
+                }
+            )
 
     df = pd.DataFrame(data)
-    save_loc = get_data_path(f"{data_type}/{source}", "images")
-    games = {g:c for g,c in game_colors.items() if g != "Unknown"}
+    save_loc = get_data_path(f"{args.data_type}/{args.source}", "images")
+    games = {g: c for g, c in game_colors.items() if g != "Unknown"}
     plot_proportion_resistant(save_loc, df, games)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        main(*sys.argv[1:])
+    main()
