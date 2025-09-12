@@ -2,7 +2,7 @@ from matplotlib import cm
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 
-from fokker_planck import param_names
+from pdfs import param_names
 
 
 def format_metric_name(metric):
@@ -43,7 +43,7 @@ def plot_paramsweep_paper(save_loc, df, metrics, title):
         scalarmap = cm.ScalarMappable(norm=norm, cmap=cmap)
         for i, sm in enumerate(sms):
             df_sm = df[df["sm"] == sm]
-            df_sm = df_sm.pivot(index="amw", columns="awm", values=metric)
+            df_sm = df_sm.pivot(index="awm", columns="amw", values=metric)
             ax[j][i].imshow(df_sm, cmap=cmap, norm=norm)
             ax[j][i].tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
             ax[j][i].axvline(sum(ax[j][i].get_xlim()) / 2, color="black", lw=1)
@@ -128,7 +128,7 @@ def plot_all(save_loc, df):
             plot_paramsweep(save_loc, df, metric)
     game_params = [f"Mean {x} Difference" for x in ["sm", "awm", "amw"]]
     plot_paramsweep_paper(save_loc, df, game_params, "Self-Fitting Results")
-    other_params = [f"Mean {x} Difference" for x in ["N", "mu", "c"]]
+    other_params = [f"Mean {x} Difference" for x in ["n", "mu", "c"]]
     plot_paramsweep_paper(save_loc, df, other_params, "Self-Fitting Results: N, mu, C")
 
     with open(f"{save_loc}/mean_param_diff_ci.txt", "w") as f:
@@ -136,6 +136,6 @@ def plot_all(save_loc, df):
             param_name = f"Mean {param} Difference"
             f.write(get_confidence_interval_str(df, param_name))
         f.write(get_confidence_interval_str(df, "Correct Game Classifications"))
-        f.write(get_confidence_interval_str(df, "Mean Game Quadrant Distance"))
+        f.write(get_confidence_interval_str(df, "Game Quadrant Distance"))
 
     df.to_csv(f"{save_loc}/df.csv", index=False)

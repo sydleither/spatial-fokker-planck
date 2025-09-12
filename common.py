@@ -3,10 +3,8 @@ Functions or variables used across multiple files.
 """
 
 import os
-from random import choices
 
 import numpy as np
-from scipy import stats
 
 
 game_colors = {
@@ -46,14 +44,14 @@ def calculate_fp_params(a, b, c, d):
     return awm, amw, sm
 
 
-def classify_game(awm, amw, sm, return_params=False):
+def classify_game(awm, amw, sm, norm=1, return_params=False):
     """
     Convert from FP terms to game quadrant
     """
-    a = 1
-    b = 1 + awm
-    c = 1 + sm + amw
-    d = 1 + sm
+    a = norm
+    b = norm + awm
+    c = norm + sm + amw
+    d = norm + sm
 
     if np.isclose(a, c) or np.isclose(b, d):
         game = "Unknown"
@@ -69,31 +67,3 @@ def classify_game(awm, amw, sm, return_params=False):
     if return_params:
         return game, a, b, c, d
     return game
-
-
-def spatial_subsample(s_coords, r_coords, sample_length, num_samples=5000):
-    """
-    Create spatial subsample support and distribution.
-    """
-    dims = range(len(s_coords[0]))
-    max_dims = [max(np.max(s_coords[:, i]), np.max(r_coords[:, i])) for i in dims]
-    dim_vals = [choices(range(0, max_dims[i] - sample_length), k=num_samples) for i in dims]
-    fr_counts = []
-    for s in range(num_samples):
-        ld = [dim_vals[i][s] for i in dims]
-        ud = [ld[i] + sample_length for i in dims]
-        subset_s = [(s_coords[:, i] >= ld[i]) & (s_coords[:, i] <= ud[i]) for i in dims]
-        subset_s = np.sum(np.all(subset_s, axis=0))
-        subset_r = [(r_coords[:, i] >= ld[i]) & (r_coords[:, i] <= ud[i]) for i in dims]
-        subset_r = np.sum(np.all(subset_r, axis=0))
-        subset_total = subset_s + subset_r
-        if subset_total == 0:
-            continue
-        fr_counts.append(subset_r / subset_total)
-
-    xdata = np.linspace(max(min(fr_counts), 0.001), min(max(fr_counts), 0.999), 100)
-    kde = stats.gaussian_kde(fr_counts)
-    pdf = kde(xdata)
-    neg_lnpdf = -np.log(pdf)
-    #neg_lnpdf = pdf / max(pdf)
-    return xdata, neg_lnpdf

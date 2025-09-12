@@ -2,19 +2,9 @@
 
 Writes config files and run scripts to sample the ABM
 across diverse payoff matrices and starting conditions.
-
-Expected usage:
-python3 -m data_generation.main_data data_dir interaction_radius reproduction_radius run_cmd
-
-Where:
-data_dir: the parent directory the data will be located in
-interaction_radius
-reproduction_radius
-run_cmd: how to run the ABM samples
-    e.g. "sbatch job_abm.sb" or "java -cp build/:lib/* SpatialEGT.SpatialEGT"
 """
 
-import sys
+import argparse
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -28,7 +18,9 @@ from individual_fitting_plots import gamespace_plot
 def game_spread(data_dir, experiment_name, samples):
     df = pd.DataFrame(samples, columns=["awm", "amw", "sm"])
     df[["Game", "a", "b", "c", "d"]] = df.apply(
-        lambda x: classify_game(x["awm"], x["amw"], x["sm"], True), axis=1, result_type="expand"
+        lambda x: classify_game(x["awm"], x["amw"], x["sm"], return_params=True),
+        axis=1,
+        result_type="expand",
     )
     df["c-a"] = df["c"] - df["a"]
     df["b-d"] = df["b"] - df["d"]
@@ -40,55 +32,61 @@ def game_spread(data_dir, experiment_name, samples):
     gamespace_plot(ax, df, "c-a", "b-d")
     fig.tight_layout()
     fig.patch.set_alpha(0)
-    fig.savefig(f"{data_dir}/{experiment_name}/gamespace.png", bbox_inches="tight")
+    fig.savefig(f"{data_dir}/{experiment_name}/gamespace.png", bbox_inches="tight", dpi=200)
     plt.close()
 
 
-def main(data_dir, interaction_radius, reproduction_radius, run_command):
+def main():
     """
     Generate scripts to run the ABM
     """
-    data_dir = get_data_path(data_dir, f"{interaction_radius}_{reproduction_radius}")
-    experiment_name = "raw"
-    space = "2D"
-    end_time = 200
-    write_freq = 50
-    grid_size = 200
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--data_dir", type=str, default="in_silico")
+    parser.add_argument("-i", "--interaction_radius", type=int, default=5)
+    parser.add_argument("-r", "--reproduction_radius", type=int, default=5)
+    parser.add_argument("-run", "--run_command", type=str, default="sbatch job_abm.sb")
+    parser.add_argument("-exp", "--experiment_name", type=str, default="raw")
+    parser.add_argument("-end", "--end_time", type=int, default=500)
+    parser.add_argument("-w", "--write_freq", type=int, default=100)
+    parser.add_argument("-g", "--grid_size", type=int, default=200)
+    args = parser.parse_args()
 
-    game_parameters = game_parameter_sweep()
+    source = f"{args.interaction_radius}_{args.reproduction_radius}"
+    data_dir = get_data_path(args.data_dir, source)
+
+    game_parameters = game_parameter_sweep(r=0.25)
     samples = []
     for awm, amw, sm in game_parameters:
-        samples.append(({"awm": awm, "amw": amw, "sm":sm}))
+        samples.append(({"awm": awm, "amw": amw, "sm": sm}))
 
     run_output = []
-    run_str = f"{run_command} ../{data_dir} {experiment_name}"
+    run_str = f"{args.run_command} ../{data_dir} {args.experiment_name}"
     for s, sample in enumerate(samples):
         config_name = str(s)
         seed = config_name
-        _, a, b, c, d = classify_game(sample["awm"], sample["amw"], sample["sm"], return_params=True)
-        payoff = [float(a), float(b), float(c), float(d)]
+        _, a, b, c, d = classify_game(
+            sample["awm"], sample["amw"], sample["sm"], norm=0.5, return_params=True
+        )
+        payoff = [a, b, c, d]
         write_config(
             data_dir,
-            experiment_name,
+            args.experiment_name,
             config_name,
             seed,
             payoff,
-            int(0.5 * grid_size**2),
+            int(0.5 * args.grid_size**2),
             0.5,
-            x=grid_size,
-            y=grid_size,
-            interaction_radius=interaction_radius,
-            reproduction_radius=reproduction_radius,
-            write_freq=write_freq,
-            ticks=end_time,
+            x=args.grid_size,
+            y=args.grid_size,
+            interaction_radius=args.interaction_radius,
+            reproduction_radius=args.reproduction_radius,
+            write_freq=args.write_freq,
+            ticks=args.end_time,
         )
-        run_output.append(f"{run_str} {config_name} {space} {seed}\n")
-    write_run_scripts(data_dir, experiment_name, run_output)
-    game_spread(data_dir, experiment_name, samples)
+        run_output.append(f"{run_str} {config_name} 2D {seed}\n")
+    write_run_scripts(data_dir, args.experiment_name, run_output)
+    game_spread(data_dir, args.experiment_name, samples)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 5:
-        main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4])
-    else:
-        print("Please see the module docstring for usage instructions.")
+    main()
