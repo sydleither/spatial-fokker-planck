@@ -26,12 +26,8 @@ def plot_proportion_resistant(save_loc, df, games):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--transform", type=str, default="none")
     parser.add_argument("-d", "--data_type", type=str, default="in_silico")
     parser.add_argument("-src", "--source", type=str, default="5_5")
-    parser.add_argument("-sub", "--subsample_length", type=int, default=5)
-    parser.add_argument("-w", "--walkers", type=int, default=100)
-    parser.add_argument("-i", "--iterations", type=int, default=50000)
     args = parser.parse_args()
 
     data_path = get_data_path(f"{args.data_type}/{args.source}", "raw")
