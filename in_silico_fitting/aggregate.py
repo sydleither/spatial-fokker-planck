@@ -7,10 +7,10 @@ import os
 
 import pandas as pd
 
-from abm_utils import read_sample
 from aggregate_fitting_plots import plot_all
 from common import calculate_fp_params, get_data_path
 from fitting_utils import evaluate_performance
+from in_silico_fitting.abm_utils import read_sample
 from pdfs import FokkerPlanck, SpatialSubsample
 from mcmc import mcmc
 
