@@ -44,11 +44,14 @@ def main():
     # Iterate over samples and calculate fit quality
     data_path = get_data_path(f"{args.data_type}/{args.source}", "raw")
     data = []
-    for sample in data_path:
-        if not os.path.isdir({data_path} / {sample}):
+    for sample in os.listdir(data_path):
+        if not os.path.isdir(f"{data_path}/{sample}"):
             continue
         s_coords, r_coords, config = read_sample(data_path, sample)
         awm, amw, sm = calculate_fp_params(config["A"], config["B"], config["C"], config["D"])
+        awm = round(awm, 3)
+        amw = round(amw, 3)
+        sm = round(sm, 3)
         params = [n, mu, awm, amw, sm, c]
         xdata, ydata = spsb(s_coords, r_coords, subsample_length)
         walker_ends = mcmc(fp, xdata, ydata, params, fit_params, walkers, iterations)
