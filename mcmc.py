@@ -6,7 +6,7 @@ from pdfs import param_names
 
 INITIAL = {
     "n": 100,
-    "mu": 0.001,
+    "mu": 0.05,
     "awm": 0.0,
     "amw": 0.0,
     "sm": 0.1,
@@ -14,8 +14,8 @@ INITIAL = {
 }
 
 BOUNDS = {
-    "n": (1, 1000),
-    "mu": (0, 0.1),
+    "n": (1, 500),
+    "mu": (0, 0.5),
     "awm": (-1, 1),
     "amw": (-1, 1),
     "sm": (0, 1),
