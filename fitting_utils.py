@@ -5,7 +5,7 @@ from common import classify_game, game_colors
 from pdfs import param_names
 
 
-def game_parameter_sweep(num_a=10, num_sm=5, r=1):
+def game_parameter_sweep(num_a=10, num_sm=5, r=0.25):
     params = []
     for sm in np.round(np.linspace(0.05, 0.25, num_sm), 3):
         for awm in np.round(np.linspace(-r+sm, r+sm, num_a), 3):

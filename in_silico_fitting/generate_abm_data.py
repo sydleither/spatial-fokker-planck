@@ -46,15 +46,15 @@ def main():
     parser.add_argument("-r", "--reproduction_radius", type=int, default=5)
     parser.add_argument("-run", "--run_command", type=str, default="sbatch job_abm.sb")
     parser.add_argument("-exp", "--experiment_name", type=str, default="raw")
-    parser.add_argument("-end", "--end_time", type=int, default=500)
-    parser.add_argument("-w", "--write_freq", type=int, default=100)
+    parser.add_argument("-end", "--end_time", type=int, default=1000)
+    parser.add_argument("-w", "--write_freq", type=int, default=200)
     parser.add_argument("-g", "--grid_size", type=int, default=200)
     args = parser.parse_args()
 
     source = f"{args.interaction_radius}_{args.reproduction_radius}"
     data_dir = get_data_path(args.data_dir, source)
 
-    game_parameters = game_parameter_sweep(r=0.25)
+    game_parameters = game_parameter_sweep()
     samples = []
     for awm, amw, sm in game_parameters:
         samples.append(({"awm": awm, "amw": amw, "sm": sm}))
