@@ -46,8 +46,8 @@ def main():
     parser.add_argument("-r", "--reproduction_radius", type=int, default=5)
     parser.add_argument("-run", "--run_command", type=str, default="sbatch job_abm.sb")
     parser.add_argument("-exp", "--experiment_name", type=str, default="raw")
-    parser.add_argument("-end", "--end_time", type=int, default=1000)
-    parser.add_argument("-w", "--write_freq", type=int, default=200)
+    parser.add_argument("-end", "--end_time", type=int, default=500)
+    parser.add_argument("-w", "--write_freq", type=int, default=100)
     parser.add_argument("-g", "--grid_size", type=int, default=200)
     args = parser.parse_args()
 
@@ -78,6 +78,7 @@ def main():
             0.5,
             x=args.grid_size,
             y=args.grid_size,
+            turnover=0.125,
             interaction_radius=args.interaction_radius,
             reproduction_radius=args.reproduction_radius,
             write_freq=args.write_freq,

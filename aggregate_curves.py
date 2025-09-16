@@ -15,7 +15,7 @@ from pdfs import FokkerPlanck, SpatialSubsample
 
 def fp_plot(transform, n, mu, c, sm):
     num_a = 10
-    r = 1
+    r = 0.25
     fp = FokkerPlanck().get_fokker_planck(transform)
     fig, ax = plt.subplots(num_a, num_a, figsize=(20, 20), constrained_layout=True)
     for i,awm in enumerate(np.round(np.linspace(-r+sm, r+sm, num_a), 3)):
