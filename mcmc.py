@@ -35,7 +35,7 @@ def lnprob(params, func, x, y, set_params):
         else:
             lower, upper = BOUNDS[param_name]
             param_val = params[i]
-            if param_val < lower or param_val > upper:
+            if param_val <= lower or param_val >= upper:
                 return -np.inf
             full_params.append(param_val)
             i += 1

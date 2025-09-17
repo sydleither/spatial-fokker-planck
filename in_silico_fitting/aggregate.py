@@ -42,7 +42,6 @@ def main():
     iterations = args.iterations
 
     # Iterate over samples and calculate fit quality
-    data_path = get_data_path(f"{args.data_type}/{args.source}", "raw")
     data = []
     for sample in os.listdir(data_path):
         if not os.path.isdir(f"{data_path}/{sample}"):

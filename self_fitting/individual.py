@@ -19,10 +19,10 @@ def main():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-n", "--n", type=int, default=100)
-    parser.add_argument("-mu", "--mu", type=float, default=0.005)
+    parser.add_argument("-mu", "--mu", type=float, default=0.05)
     parser.add_argument("-awm", "--awm", type=float, default=0.02)
     parser.add_argument("-amw", "--amw", type=float, default=-0.02)
-    parser.add_argument("-sm", "--sm", type=float, default=0.01)
+    parser.add_argument("-sm", "--sm", type=float, default=0.05)
     parser.add_argument("-c", "--c", type=float, default=1)
     parser.add_argument("-fit_n", "--fit_n", type=int, default=1)
     parser.add_argument("-fit_mu", "--fit_mu", type=int, default=1)

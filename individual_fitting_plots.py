@@ -143,7 +143,10 @@ def plot_all(save_loc, fp, walker_ends, xdata, ydata, params, fit_params):
     plot_true_curve(save_loc, params, xdata, ydata)
     plot_walker_curves(save_loc, fp, walker_ends, xdata, ydata)
     plot_walker_curve_mse(save_loc, fp, walker_ends, xdata, ydata)
-    plot_walker_gamespace(save_loc, walker_ends, params[2:5])
+    try:
+        plot_walker_gamespace(save_loc, walker_ends, params[2:5])
+    except Exception as e:
+        print(e)
     plot_walker_pairplot(save_loc, walker_ends, fit_params)
     plot_walker_gameparams(save_loc, walker_ends, params, fit_params)
 
