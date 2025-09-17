@@ -49,6 +49,7 @@ def main():
     parser.add_argument("-end", "--end_time", type=int, default=100)
     parser.add_argument("-w", "--write_freq", type=int, default=100)
     parser.add_argument("-g", "--grid_size", type=int, default=200)
+    parser.add_argument("-mu", "--mutation_rate", type=float, default=0.01)
     args = parser.parse_args()
 
     source = f"{args.interaction_radius}_{args.reproduction_radius}"
@@ -79,6 +80,7 @@ def main():
             x=args.grid_size,
             y=args.grid_size,
             turnover=0.125,
+            mutation_rate=args.mutation_rate,
             interaction_radius=args.interaction_radius,
             reproduction_radius=args.reproduction_radius,
             write_freq=args.write_freq,
