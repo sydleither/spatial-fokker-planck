@@ -62,7 +62,8 @@ def main():
     parser.add_argument("-src", "--source", type=str, default="5_5")
     parser.add_argument("-sam", "--sample", type=str, default="0")
     parser.add_argument("-sub", "--subsample_length", type=int, default=5)
-    parser.add_argument("-fit_N", "--fit_N", type=int, default=1)
+    parser.add_argument("-fit_n", "--fit_n", type=int, default=1)
+    parser.add_argument("-fit_mu", "--fit_mu", type=int, default=1)
     parser.add_argument("-fit_awm", "--fit_awm", type=int, default=1)
     parser.add_argument("-fit_amw", "--fit_amw", type=int, default=1)
     parser.add_argument("-fit_sm", "--fit_sm", type=int, default=1)
@@ -79,8 +80,15 @@ def main():
 
     # Run MCMC
     awm, amw, sm = calculate_fp_params(config["A"], config["B"], config["C"], config["D"])
-    params = [args.subsample_length**2, 0.1, round(awm, 3), round(amw, 3), round(sm, 3), 1]
-    fit_params = [args.fit_N, 1, args.fit_awm, args.fit_amw, args.fit_sm, 1]
+    params = [
+        args.subsample_length**2,
+        config["mutationRate"],
+        round(awm, 3),
+        round(amw, 3),
+        round(sm, 3),
+        1,
+    ]
+    fit_params = [args.fit_n, args.fit_mu, args.fit_awm, args.fit_amw, args.fit_sm, 1]
     sampler, walker_ends = mcmc(
         fp,
         xdata,

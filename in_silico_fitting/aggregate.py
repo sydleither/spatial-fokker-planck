@@ -25,6 +25,8 @@ def main():
     parser.add_argument("-d", "--data_type", type=str, default="in_silico")
     parser.add_argument("-src", "--source", type=str, default="5_5")
     parser.add_argument("-sub", "--subsample_length", type=int, default=5)
+    parser.add_argument("-fit_n", "--fit_n", type=int, default=1)
+    parser.add_argument("-fit_mu", "--fit_mu", type=int, default=1)
     parser.add_argument("-w", "--walkers", type=int, default=100)
     parser.add_argument("-i", "--iterations", type=int, default=50000)
     args = parser.parse_args()
@@ -33,9 +35,8 @@ def main():
     data_path = get_data_path(f"{args.data_type}/{args.source}", "raw")
     fp = FokkerPlanck().get_fokker_planck(args.transform)
     spsb = SpatialSubsample().get_spatial_subsample(args.transform)
-    fit_params = [1, 1, 1, 1, 1, 1]
-    n = 100
-    mu = 0.01
+    fit_params = [args.fit_n, args.fit_mu, 1, 1, 1, 1]
+    n = args.subsample_length**2
     c = 1
     subsample_length = args.subsample_length
     walkers = args.walkers
@@ -48,6 +49,7 @@ def main():
             continue
         s_coords, r_coords, config = read_sample(data_path, sample)
         awm, amw, sm = calculate_fp_params(config["A"], config["B"], config["C"], config["D"])
+        mu = config["mutationRate"]
         awm = round(awm, 3)
         amw = round(amw, 3)
         sm = round(sm, 3)
